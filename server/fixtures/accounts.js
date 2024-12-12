@@ -5,15 +5,15 @@ import { Accounts } from 'meteor/accounts-base';
 const USERNAME = 'admin';
 const PASSWORD = 'password';
 
-if (!Accounts.findUserByUsername(USERNAME)) {
-    Accounts.createUser({
+if (!await Accounts.findUserByUsername(USERNAME)) {
+    await Accounts.createUser({
         username: USERNAME,
         password: PASSWORD,
     });
 
-    let newUser = Accounts.findUserByUsername(USERNAME);
+    let newUser = await Accounts.findUserByUsername(USERNAME);
      
-    Meteor.users.update( newUser._id, {
+    await Meteor.users.updateAsync( newUser._id, {
         $set: {
             userData: {
                 firstName: 'IT',

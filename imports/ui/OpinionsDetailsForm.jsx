@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import { FlowRouter } from 'meteor/kadira:flow-router';
 
 import PageHeader from 'antd/lib/page-header';
@@ -158,36 +158,42 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
         }
     }
 
-    if (currentUser && !opinionIsLoading && opinion) {
-        let perm = { currentUser };
 
-        const sharedWithUser = opinion.sharedWith.find( shared => shared.user.userId === currentUser._id );
-        
-        if (sharedWithUser && sharedWithUser.role) {
-            perm.sharedRole = sharedWithUser.role;
-        }
-        let edit = false,
-            del = false,
-            share = false,
-            cancelShare = false,
-            shareWithExplicitRole = false;
-        if ( !sharedWithUser && currentUser.userData.roles.includes( 'OPINION_CONTROL' ) ){
-            // Spezialrolle für Gutachten Kontrolle beachten und wenn vorhanden und nicht "geteilt mit", alle Berechtigungen auf false lassen.
-        }
-        else {        
-            edit = hasPermission(perm, 'opinion.edit');
-            del = hasPermission(perm, 'opinion.remove');
-            share = hasPermission(perm, 'shareWith');
-            cancelShare = hasPermission(perm, 'cancelSharedWith');
-            shareWithExplicitRole = hasPermission(perm, 'shareWithExplicitRole');
-        }
+    useEffect(() => {
+        async function setPermissions() {
+            let perm = { currentUser };
 
-        if (edit != canEdit) setCanEdit(edit);
-        if (del != canDelete) setCanDelete(del);
-        if (share != canShare) setCanShare(share);
-        if (cancelShare != canCancelShare) setCanCancelShare(cancelShare);
-        if (shareWithExplicitRole != canShareWithExplicitRole) setCanShareWithExplicitRole(shareWithExplicitRole);
-    }
+            const sharedWithUser = opinion.sharedWith.find( shared => shared.user.userId === currentUser._id );
+            
+            if (sharedWithUser && sharedWithUser.role) {
+                perm.sharedRole = sharedWithUser.role;
+            }
+            if ( !sharedWithUser && currentUser.userData.roles.includes( 'OPINION_CONTROL' ) ){
+                // Spezialrolle für Gutachten Kontrolle beachten und wenn vorhanden und nicht "geteilt mit", alle Berechtigungen auf false lassen.
+                if (canEdit) setCanEdit(false);
+                if (canDelete) setCanDelete(false);
+                if (canShare) setCanShare(false);
+                if (canCancelShare) setCanCancelShare(false);
+                if (canShareWithExplicitRole) setCanShareWithExplicitRole(false);
+            }
+            else {
+                const [edit, del, share, cancelShare, shareWithExplicitRole] = await Promise.all([
+                    hasPermission(perm, 'opinion.edit'),
+                    hasPermission(perm, 'opinion.remove'),
+                    hasPermission(perm, 'shareWith'),
+                    hasPermission(perm, 'cancelSharedWith'),
+                    hasPermission(perm, 'shareWithExplicitRole')
+                ]);
+
+                if (edit != canEdit) setCanEdit(edit);
+                if (del != canDelete) setCanDelete(del);
+                if (share != canShare) setCanShare(share);
+                if (cancelShare != canCancelShare) setCanCancelShare(cancelShare);
+                if (shareWithExplicitRole != canShareWithExplicitRole) setCanShareWithExplicitRole(shareWithExplicitRole);
+            }
+        }
+        if(opinion) setPermissions()
+    }, [currentUser, opinion, canEdit, canDelete, canShare, canCancelShare, canShareWithExplicitRole])
 
     let pageHeaderButtons = [];
 

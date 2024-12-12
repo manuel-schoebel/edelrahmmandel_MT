@@ -15,7 +15,7 @@ import { DiffDrawer } from './components/Differ';
 import { ReplyTo } from './components/ReplyTo';
 import { MentionsWithEmojis } from './components/MentionsWithEmojis';
 
-import { useOpinion , useActivities } from '../client/trackers';
+import { useOpinion , useActivities, useTest } from '../client/trackers';
 import { hasPermission } from '../api/helpers/roles';
 
 import { FlowRouter } from 'meteor/kadira:flow-router';
@@ -32,15 +32,15 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
     const [ canPostMessage, setCanPostMessage ] = useState(false);
 
     const parentRefDetail = refDetail;
+
     // We have to use the "wright" refDetail, so that a user-post will be stored to wright detail
     refDetail = FlowRouter.getQueryParam('activitiesBy') || refDetail;
-
     useEffect( () => {
         // check for hash in route
         const hash = FlowRouter.current().context.hash;
         if (!hash)
             // scroll to end of list
-            activitiesEndRef.current.scrollIntoView(); //{ behavior: "smooth" })
+            activitiesEndRef.current?.scrollIntoView(); //{ behavior: "smooth" })
         else {
             // scroll to hashed item
             const el = $('#' + hash).get(0);
@@ -56,24 +56,46 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
         }
     }, [activities/*, FlowRouter.getQueryParam('activitiesBy')*/]);
 
-
-    if (currentUser && !opinionIsLoading && opinion) {
-        let post = false,
-        perm = { currentUser };
-
-        const sharedWithUser = opinion.sharedWith.find( shared => shared.user.userId === currentUser._id );
-        if (sharedWithUser && sharedWithUser.role) {
-            perm.sharedRole = sharedWithUser.role;
+    useEffect(() => {
+        if(!currentUser && canPostMessage) {
+            setCanPostMessage(false);
+            return
+        };
+        async function setPermission() {
+            let perm = { currentUser };
+            const sharedWithUser = opinion.sharedWith.find( shared => shared.user.userId === currentUser._id );
+            if (sharedWithUser && sharedWithUser.role) {
+                perm.sharedRole = sharedWithUser.role;
+            }
+            if ( sharedWithUser ){
+                post = await hasPermission(perm, 'opinion.canPostMessage');
+            } else if ( currentUser.userData.roles.includes( 'OPINION_CONTROL' ) ) {
+                // Spezialrolle für Gutachten Kontrolle beachten.
+                post = false;
+            }
+            if (post != canPostMessage) setCanPostMessage(post);
         }
+        if(opinion) setPermission();
+    }, [currentUser, opinion, canPostMessage])
+
+    // if (currentUser && !opinionIsLoading && opinion) {
+    //     let post = false,
+    //     perm = { currentUser };
+
+    //     const sharedWithUser = opinion.sharedWith.find( shared => shared.user.userId === currentUser._id );
+    //     if (sharedWithUser && sharedWithUser.role) {
+    //         perm.sharedRole = sharedWithUser.role;
+    //     }
         
-        if ( sharedWithUser )
-            post = hasPermission(perm, 'opinion.canPostMessage');
-        else if ( currentUser.userData.roles.includes( 'OPINION_CONTROL' ) )
-            // Spezialrolle für Gutachten Kontrolle beachten.
-            post = false;
+    //     if ( sharedWithUser )
+    //         post = hasPermission(perm, 'opinion.canPostMessage');
+    //     else if ( currentUser.userData.roles.includes( 'OPINION_CONTROL' ) )
+    //         // Spezialrolle für Gutachten Kontrolle beachten.
+    //         post = false;
             
-        if (post != canPostMessage) setCanPostMessage(post);
-    }
+    //     console.log("setCanPostMessage?", {post, canPostMessage})
+    //     if (post != canPostMessage) setCanPostMessage(post);
+    // }
 
     const postMessage = () => {
         form.validateFields().then( values => {
@@ -126,6 +148,8 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
             />
         );
     }
+
+    console.log('render ListActivities', activities);
 
     return (
         <div className="mbac-activities-sider">

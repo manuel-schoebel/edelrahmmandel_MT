@@ -20,31 +20,32 @@ Meteor.methods({
      * 
      * @param {Object} data Specified the data for the opinion to be inserted
      */
-    'opinion.insert'(data) {
+    async 'opinion.insert'(data) {
         check(data, Object);
 
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if the user wants to create a new Template or a "normal" opinion
         // therefor we have to check different permissions
         const permissionName = data.isTemplate ? 'opinion.manageTemplate' : 'opinion.create';
-        if (!hasPermission({ currentUser }, permissionName)) {
+        if (!await hasPermission({ currentUser }, permissionName)) {
             const errorMessage = data.isTemplate 
                 ? 'Keine Berechtigung zum Erstellen einer Gutachten-Vorlage'
                 : 'Keine Berechtigung zum Erstellen eines neuen Gutachten.';
             throw new Meteor.Error(errorMessage);
         }
 
-        let opinion = injectUserData({ currentUser }, {...data});
+        let opinion = await injectUserData({ currentUser }, {...data});
 
         if (Meteor.isServer) {
-            let no = sequenceNextValue('opinion').toString();
+            let no = await sequenceNextValue('opinion');
+            console.log('no', no);
             
-            opinion.opinionNo = (new Date()).getFullYear() + '-' + ZEROS.substring(0, 4 - no.length) + no;
+            opinion.opinionNo = (new Date()).getFullYear() + '-' + ZEROS.substring(0, 4 - no.toString().length) + no;
         } else {
             opinion.opinionNo = '?'
         }
@@ -52,7 +53,7 @@ Meteor.methods({
         // check if we need to copy data from a choosen template
         let template;
         if (data.refTemplate) {
-            template = Opinions.findOne(data.refTemplate);
+            template = await Opinions.findOneAsync(data.refTemplate);
 
             // copy the document variables
             if (!template.userVariables) {
@@ -75,22 +76,23 @@ Meteor.methods({
             throw new Meteor.Error(err.message);
         }
         
-        let newOpinionId = Opinions.insert(opinion);
+        let newOpinionId = await Opinions.insertAsync(opinion);
         
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: newOpinionId,
             type: 'SYSTEM-LOG',
             message: 'Gutachten wurde erstellt.'
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
 
         // check if we need to copy the details from a template
         if (Meteor.isServer && data.refTemplate) {
             let oldToNewRefs = {};
 
-            const findAndInsert = parent => {
-                OpinionDetails.find({ refOpinion: data.refTemplate, refParentDetail: parent }).map( detail => {
+            const findAndInsert = async parent => {
+                const details = await OpinionDetails.find({ refOpinion: data.refTemplate, refParentDetail: parent }).fetchAsync();
+                for (const detail of details) {
                     const oldId = detail._id;
 
                     delete detail._id;
@@ -106,13 +108,13 @@ Meteor.methods({
                     detail.commentsCount = 0;
                     detail.activitiesCount = 0;
 
-                    const newId = OpinionDetails.insert(detail);
+                    const newId = await OpinionDetails.insertAsync(detail);
                     oldToNewRefs[oldId] = newId;
 
-                    findAndInsert(oldId);
-                });
+                    await findAndInsert(oldId);
+                }
             }
-            findAndInsert(null);
+            await findAndInsert(null);
         }
     },
 

@@ -13,7 +13,7 @@ let Config = {
         }
         return 'Please upload image, with size equal or less than 10MB';
     },
-    protected(fileObj) {
+    async protected(fileObj) {
         // protect access to the file
         // only autth users that has shared the opinion can
         // access the image-file
@@ -22,7 +22,7 @@ let Config = {
         const { refOpinion } = fileObj.meta;
 
         // ... and check then if the current-user is member of sharedWith
-        const opinion = Opinions.findOne({
+        const opinion = await Opinions.findOneAsync({
             _id: refOpinion,
             'sharedWith.user.userId': this.userId
         });

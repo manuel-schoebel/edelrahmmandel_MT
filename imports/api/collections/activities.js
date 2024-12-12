@@ -1,6 +1,6 @@
 import { Mongo } from 'meteor/mongo';
-
-import SimpleSchema from  'simpl-schema';
+import 'meteor/aldeed:collection2/static';
+import SimpleSchema from  'meteor/aldeed:simple-schema';
 
 import { CreationSchema } from '../sharedSchemas/user';
 

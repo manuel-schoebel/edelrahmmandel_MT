@@ -9,6 +9,10 @@ alle PDF-Vorschau-Dateien gelöscht
 
 console.log( 'Remove PDFs with meta.preview = true ...' );
 
-OpinionPdfs.remove({'meta.preview': true});
+try{
+    await OpinionPdfs.removeAsync({'meta.preview': true});
+} catch(e) {
+    console.log('Error removing pdfs', e.message)
+}
 
 console.log( 'Remove PDFs with meta.preview = true; (done)' );

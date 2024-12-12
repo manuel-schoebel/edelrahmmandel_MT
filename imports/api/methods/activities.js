@@ -12,21 +12,21 @@ import { UserActivities, UserActivitySchema } from '../collections/userActivitie
 /**
  * 
  */
-const messageWithMentions = ({currentUser, msg, refs}) => {
+const messageWithMentions = async ({currentUser, msg, refs}) => {
     let { text, mentions } = msg;
 
     let message = text.replace(/\n/g, '<br>');
 
     // check mentions
     if (mentions) {
-        Object.keys(mentions).forEach( userId => {
+        Object.keys(mentions).forEach( async userId => {
             const username = mentions[userId];
             const userMentionRegExp = new RegExp('@' + username, 'g');
 
             if (message.indexOf('@' + username) > -1) {
                 message = message.replace(userMentionRegExp, `<span class="mbac-user-mention" user-id="${userId}">${username}</span>`);
 
-                const useractivity = injectUserData({ currentUser }, { 
+                const useractivity = await injectUserData({ currentUser }, { 
                     refUser: userId,
                     type: 'MENTIONED',
                     message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat Sie erwähnt.`,
@@ -58,7 +58,7 @@ Meteor.methods({
     /**
      * User-Like or Dislike for opinionDetail by given id
      */
-    'activities.doSocial'(action, id) {
+    async 'activities.doSocial'(action, id) {
         this.unblock();
 
         if (!this.userId) {
@@ -69,8 +69,8 @@ Meteor.methods({
             throw new Meteor.Error('Unknown social command.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const opinionDetail = OpinionDetails.findOne(id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const opinionDetail = await OpinionDetails.findOneAsync(id);
 
         const isShared = Opinions.findOne({
             _id: opinionDetail.refOpinion,
@@ -82,13 +82,13 @@ Meteor.methods({
         }
 
         // check if we need to push or pop the like
-        const doneBefore = OpinionDetails.findOne({            
+        const doneBefore = await OpinionDetails.findOneAsync({            
             _id: id,
             [action + 's.userId']: this.userId
         });
 
         if (!doneBefore) {
-            OpinionDetails.update({_id: id}, {
+            await OpinionDetails.updateAsync({_id: id}, {
                 $push: {
                     [action + 's']: {
                         userId: this.userId,
@@ -99,7 +99,7 @@ Meteor.methods({
             });
         } else {
             // unlike
-            OpinionDetails.update({_id: id}, {
+            await OpinionDetails.updateAsync({_id: id}, {
                 $pull: {
                     [action + 's']: {
                         userId: this.userId,
@@ -116,19 +116,19 @@ Meteor.methods({
      * 
      * @param {String} msg Message that the user posts
      */
-    'activities.postmessage'(refOpinion, refDetail, refParentDetail, activitiesBy, msg) {
+    async 'activities.postmessage'(refOpinion, refDetail, refParentDetail, activitiesBy, msg) {
         this.unblock();
 
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
         
-        const currentUser = Meteor.users.findOne(this.userId);
+        const currentUser = await Meteor.users.findOneAsync(this.userId);
         
-        const detail = OpinionDetails.findOne(refDetail);
+        const detail = await OpinionDetails.findOneAsync(refDetail);
 
         // check if opinion was sharedWith the current User
-        const sharedOpinion = Opinions.findOne({
+        const sharedOpinion = await Opinions.findOneAsync({
             _id: (detail && detail.refOpinion) || refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -139,17 +139,17 @@ Meteor.methods({
 
         const sharedWithRole = sharedOpinion.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.canPostMessage')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.canPostMessage')) {
             throw new Meteor.Error('Keine Berechtigung zum Erstellen eines Kommentars zu einem Gutachten.');
         }
         
-        const detailFromActivitiesBy = OpinionDetails.findOne({
+        const detailFromActivitiesBy = await OpinionDetails.findOneAsync({
             _id: activitiesBy
         });
 
         const parentReference = refParentDetail || (detailFromActivitiesBy && detailFromActivitiesBy.refParentDetail) || null;
 
-        const message = messageWithMentions({ currentUser, msg, refs: {
+        const message = await messageWithMentions({ currentUser, msg, refs: {
             refOpinion: sharedOpinion._id,
             refOpinionDetail: (detail && detail._id) || null,
             refParentDetail: parentReference, //refParentDetail || detailFromActivitiesBy.refParentDetail,
@@ -157,7 +157,7 @@ Meteor.methods({
             refActivity: null
         }});
         
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: sharedOpinion._id,
             refDetail: (detail && detail._id) || null,
             type: 'USER-POST',
@@ -173,7 +173,7 @@ Meteor.methods({
         Activities.insert(activity);
         
         if (activity.refDetail) {
-            OpinionDetails.update(activity.refDetail, {
+            await OpinionDetails.updateAsync(activity.refDetail, {
                 $inc: { commentsCount: 1 }
             });
         }
@@ -186,20 +186,20 @@ Meteor.methods({
      * @param {String} refActivity Id of the Activity where the message is the answer for
      * @param {Object} msg (mentions, text) Message that the user posts
      */
-    'activities.replyTo'(refOpinion, refActivity, msg) {
+    async 'activities.replyTo'(refOpinion, refActivity, msg) {
         this.unblock();
 
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
 
-        const currentUser = Meteor.users.findOne(this.userId);
+        const currentUser = await Meteor.users.findOne(this.userId);
         
-        const activity = Activities.findOne(refActivity);
-        const opinionDetail = OpinionDetails.findOne(activity.refDetail);
+        const activity = await Activities.findOne(refActivity);
+        const opinionDetail = await OpinionDetails.findOne(activity.refDetail);
 
         // check if opinion was sharedWith the current User
-        const sharedOpinion = Opinions.findOne({
+        const sharedOpinion = await Opinions.findOne({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -214,7 +214,7 @@ Meteor.methods({
             throw new Meteor.Error('Keine Berechtigung zum Erstellen eines Kommentars zu einem Gutachten.');
         }
 
-        const message = messageWithMentions({ currentUser, msg, refs: {
+        const message = await messageWithMentions({ currentUser, msg, refs: {
             refOpinion: sharedOpinion._id,
             refOpinionDetail: (opinionDetail && opinionDetail._id) || null,
             refParentDetail: (opinionDetail && opinionDetail.refParentDetail) || null,
@@ -222,7 +222,7 @@ Meteor.methods({
             refActivity: refActivity
         }});
 
-        const answer = injectUserData({ currentUser }, { message }, { created: true });
+        const answer = await injectUserData({ currentUser }, { message }, { created: true });
 
         try {
             AnswerSchema.validate(answer);
@@ -230,7 +230,7 @@ Meteor.methods({
             throw new Meteor.Error(err.message);
         }
         
-        Activities.update(refActivity, {
+        await Activities.updateAsync(refActivity, {
             $push: {
                 answers: answer
             }
@@ -238,24 +238,25 @@ Meteor.methods({
 
         // tell the author of the post that someone has answered to his post, if the answer is not from himself
         if ( this.userId != activity.createdBy.userId ) {
-            UserActivities.insert(
-                injectUserData({ currentUser }, {
-                    refUser: activity.createdBy.userId,
-                    type: 'REPLYTO',
-                    refs: { 
-                        refOpinion, 
-                        refActivity,
-                        refOpinionDetail: opinionDetail && opinionDetail._id || null,
-                    },
-                    message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat auf einen Post von Ihnen geantwortet.`,
-                    originalContent: message,
-                    unread: true
-                }, { created: true })        
+            const userActivity = await injectUserData({ currentUser }, {
+                refUser: activity.createdBy.userId,
+                type: 'REPLYTO',
+                refs: { 
+                    refOpinion, 
+                    refActivity,
+                    refOpinionDetail: opinionDetail && opinionDetail._id || null,
+                },
+                message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat auf einen Post von Ihnen geantwortet.`,
+                originalContent: message,
+                unread: true
+            }, { created: true })     
+            await UserActivities.insertAsync(
+                userActivity
             );
         }
 
         if (opinionDetail) {
-            OpinionDetails.update(opinionDetail._id, {
+            await OpinionDetails.updateAsync(opinionDetail._id, {
                 $inc: { commentsCount: 1 }
             });
         }

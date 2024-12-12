@@ -4,13 +4,13 @@ import { check } from 'meteor/check';
 import { Sequences } from '../collections/sequences';
 
 var SequencesRawCollection,
-    SequencesFindAndModify;
+    SequencesFindAndModify,
+    SequencesFindOneAndUpdate;
 
 if (Meteor.isServer) {
     // rawCollection only server-side supported!
     SequencesRawCollection = Sequences.rawCollection();
     //SequencesFindAndModify = Meteor.wrapAsync(SequencesRawCollection.findAndModify, SequencesRawCollection);
-    SequencesFindOneAndUpdate = Meteor.wrapAsync(SequencesRawCollection.findOneAndUpdate, SequencesRawCollection);
 }
 
 /**
@@ -19,14 +19,14 @@ if (Meteor.isServer) {
  * @param {String} name Name of the Sequence
  * @param {*} startValue Value to start with if the sequence does not exists
  */
-export const sequenceNextValue = (seqName, startValue = 1) => {
+export const sequenceNextValue = async (seqName, startValue = 1) => {
     check(seqName, String);
 
     // check if sequence exists
-    const doc = Sequences.findOne({_id: seqName});
+    const doc = await Sequences.findOneAsync({_id: seqName});
     if (!doc) {
         try {
-            Sequences.insert({
+            await Sequences.insertAsync({
                 _id: seqName, 
                 value: startValue
             });
@@ -42,6 +42,6 @@ export const sequenceNextValue = (seqName, startValue = 1) => {
         }
     }
 
-    const result = SequencesFindOneAndUpdate({ _id: seqName }, { $inc: { value: 1 } } );
+    const result = await SequencesRawCollection.findOneAndUpdate({ _id: seqName }, { $inc: { value: 1 } } );
     return result.value.value;
 }

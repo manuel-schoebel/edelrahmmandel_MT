@@ -1,9 +1,9 @@
 import { Roles } from '/imports/api/collections/roles';
 
 //if (Roles.find().count() != 1) {
-    Roles.remove({});
+    await Roles.removeAsync({});
 
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'EVERYBODY',
         rolename: 'Jeder',
         score: 0,
@@ -28,7 +28,7 @@ import { Roles } from '/imports/api/collections/roles';
         selectable: true 
     });
 
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'EXTERNAL',
         rolename: 'Externer',
         score: 100,
@@ -56,7 +56,7 @@ import { Roles } from '/imports/api/collections/roles';
         selectable: true
     });
 
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'READONLY',
         rolename: 'Nur lesen',
         score: 150,
@@ -81,7 +81,7 @@ import { Roles } from '/imports/api/collections/roles';
         selectable: false
     });
 
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'EMPLOYEE',
         rolename: 'Mitarbeiter',
         score: 200,
@@ -110,7 +110,7 @@ import { Roles } from '/imports/api/collections/roles';
         selectable: true
     });
 
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'SPELLCHECKER',
         rolename: 'Mitarbeiter ',
         score: 250,
@@ -139,7 +139,7 @@ import { Roles } from '/imports/api/collections/roles';
 
     // special role, that permits a user with mostly all permissions on
     // the created item, that he creates
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'OWNER',
         rolename: 'Besitzer, Ersteller',
         score: 800,
@@ -173,7 +173,7 @@ import { Roles } from '/imports/api/collections/roles';
 
     // special role, that permits a user with mostly all permissions on
     // the created item, that he creates
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'EXPERT',
         rolename: 'Experte',
         score: 700,
@@ -204,7 +204,7 @@ import { Roles } from '/imports/api/collections/roles';
         selectable: false
     });
 
-    Roles.insert({
+    await Roles.insertAsync({
         _id: 'ADMIN',
         rolename: 'Administrator',
         score: 99999,

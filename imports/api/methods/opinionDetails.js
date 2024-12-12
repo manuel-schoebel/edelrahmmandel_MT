@@ -18,7 +18,7 @@ Meteor.methods({
     /**
      * User-Like or Dislike for opinionDetail by given id
      */
-    'opinionDetail.doSocial'(action, id) {
+    async 'opinionDetail.doSocial'(action, id) {
         this.unblock();
 
         if (!this.userId) {
@@ -29,10 +29,10 @@ Meteor.methods({
             throw new Meteor.Error('Unknown social command.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const opinionDetail = OpinionDetails.findOne(id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const opinionDetail = await OpinionDetails.findOneAsync(id);
 
-        const isShared = Opinions.findOne({
+        const isShared = await Opinions.findOneAsync({
             _id: opinionDetail.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -42,13 +42,13 @@ Meteor.methods({
         }
 
         // check if we need to push or pop the like
-        const doneBefore = OpinionDetails.findOne({            
+        const doneBefore = await OpinionDetails.findOneAsync({            
             _id: id,
             [action + 's.userId']: this.userId
         });
 
         if (!doneBefore) {
-            OpinionDetails.update({_id: id}, {
+            await OpinionDetails.updateAsync({_id: id}, {
                 $push: {
                     [action + 's']: {
                         userId: this.userId,
@@ -59,7 +59,7 @@ Meteor.methods({
             });
         } else {
             // unlike
-            OpinionDetails.update({_id: id}, {
+            await OpinionDetails.updateAsync({_id: id}, {
                 $pull: {
                     [action + 's']: {
                         userId: this.userId,
@@ -76,16 +76,16 @@ Meteor.methods({
      * 
      * @param {String} id Id of the opinionDetail to be toggelt
      */
-    'opinionDetail.toggleDeleted'(id) {
+    async 'opinionDetail.toggleDeleted'(id) {
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const opinionDetail = OpinionDetails.findOne(id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const opinionDetail = await OpinionDetails.findOneAsync(id);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: opinionDetail.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -100,7 +100,7 @@ Meteor.methods({
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten des Gutachten. Somit kann die Löschmarkierung nicht geändert werden.');
         }
 
-        OpinionDetails.update(id, {
+        await OpinionDetails.updateAsync(id, {
             $set:{ 
                 deleted: !opinionDetail.deleted,
                 deletedByDetail: id
@@ -635,8 +635,8 @@ Meteor.methods({
         // Prüfen ob es untergeordnete Details gibt, die ebenfalls gelöscht werden müssen
         // hierbei wird die ID vermerkt, welche für die Löschung verantwortlich ist als Kennung,
         // dass die Löschung automatisiert erfolgte
-        const findDetails2bUpdate = refDetail => {
-            OpinionDetails.find({
+        const findDetails2bUpdate = async refDetail => {
+            await OpinionDetails.find({
                 $and: [
                     { refParentDetail: refDetail },
                     { finallyRemoved: false },
@@ -926,22 +926,22 @@ const getPageHeaderTitle = (refDetail, detail) => {
 
 if (Meteor.isServer) {
     Meteor.methods({
-        'opinionDetail.getBreadcrumbItems'({refOpinion, refDetail}) {
+        async 'opinionDetail.getBreadcrumbItems'({refOpinion, refDetail}) {
             let items = [
                 { title: 'Start', uri: '/' },
                 { title: 'Gutachten', uri: '/opinions' },
             ];
 
-            const opinion = Opinions.findOne(refOpinion);
+            const opinion = await Opinions.findOneAsync(refOpinion);
             items.push({
                 title: opinion.title,
                 uri: `/opinions/${opinion._id}`
             });
 
-            const getRecursive = id => {
-                let item = OpinionDetails.findOne(id);
+            const getRecursive = async id => {
+                let item = await OpinionDetails.findOneAsync(id);
                 if (item && item.refParentDetail !== null) {
-                    getRecursive(item.refParentDetail);
+                    await getRecursive(item.refParentDetail);
                 }
                 if (item) {
                     items.push({
@@ -950,7 +950,7 @@ if (Meteor.isServer) {
                     });
                 }
             }
-            getRecursive(refDetail);
+            await getRecursive(refDetail);
 
             return items;
         }

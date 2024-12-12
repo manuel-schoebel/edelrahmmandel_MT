@@ -292,6 +292,10 @@ export const useOpinionDetails = (refOpinion, refParentDetail, callback) => useT
     return [opinionDetails, false];
 }, [refOpinion]);
 
+export const useTest = () => useTracker(() => {
+    console.log('useTest')
+}, [])
+
 /**
  * Load Activities reactivly for a given opinion or opinionDetail
  * 
@@ -299,29 +303,31 @@ export const useOpinionDetails = (refOpinion, refParentDetail, callback) => useT
  * @param {String} refDetail    id of the OpinionDetail
  */
 export const useActivities = (refOpinion , refDetail , currentUser) => useTracker( () => {
-    const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
-    if (!Meteor.user()) {
-        return noDataAvailable;
-    }
-    let hasRoleOPINION_CONTROL = false;
-    if ( currentUser && currentUser.userData.roles.includes( 'OPINION_CONTROL' ) )
-        hasRoleOPINION_CONTROL = true;// Spezialrolle für Gutachten Kontrolle beachten.
-    // Umstellung auf Async für Meteor Version 2.8, https://guide.meteor.com/2.8-migration
-    //const subscription = Meteor.subscribe('activities', { refOpinion, refDetail });
-    const subscription = Meteor.subscribe('activitiesAsync', { refOpinion , refDetail , hasRoleOPINION_CONTROL});
+    console.log({refOpinion, refDetail, currentUser})
+    // const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
+    // if (!Meteor.user()) {
+    //     return noDataAvailable;
+    // }
+    // let hasRoleOPINION_CONTROL = false;
+    // if ( currentUser && currentUser.userData.roles.includes( 'OPINION_CONTROL' ) )
+    //     hasRoleOPINION_CONTROL = true;// Spezialrolle für Gutachten Kontrolle beachten.
+    // // Umstellung auf Async für Meteor Version 2.8, https://guide.meteor.com/2.8-migration
+    // //const subscription = Meteor.subscribe('activities', { refOpinion, refDetail });
+    // const subscription = Meteor.subscribe('activitiesAsync', { refOpinion , refDetail , hasRoleOPINION_CONTROL});
     
-    if (!subscription.ready()) {
-        return noDataAvailable;
-    }
+    // if (!subscription.ready()) {
+    //     return noDataAvailable;
+    // }
 
-    let activities;
-    if (refDetail) {
-        activities = Activities.find({ refDetail }, { sort: { createdAt: 1}}).fetch();
-    } else {
-        activities = Activities.find({ refOpinion, refDetail: null }, { sort: { createdAt: 1} }).fetch();
-    }
+    // let activities;
+    // if (refDetail) {
+    //     activities = Activities.find({ refDetail }, { sort: { createdAt: 1}}).fetch();
+    // } else {
+    //     activities = Activities.find({ refOpinion, refDetail: null }, { sort: { createdAt: 1} }).fetch();
+    // }
 
-    return [ activities, false ];
+    return [ [], false ];
+    // return [ activities, false ];
 }, [refOpinion, refDetail]);
 
 
@@ -473,20 +479,26 @@ export const useOpinionActionList = refOpinion => useTracker( () => {
  * 
  * @param {String} refOpinion   id of the Opinion
  */
-export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker( () => {
+export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker(() => {
     const noDataAvailable = [ [] /*opinionPdfs*/ , true /*loading*/];
+
+    console.log('useOpinionPdfs')
+    const user = Meteor.user();
+    console.log('ujser', user);
 
     if (!Meteor.user()) {
         return noDataAvailable;
     }
     const handler = Meteor.subscribe('opinion-pdfs', refOpinion);
 
+    console.log('handler.ready()', handler.ready());
+
     if (!handler.ready()) { 
         return noDataAvailable;
     }
 
     const data = archive
-                    ? OpinionPdfs.find({ "meta.refOpinion": refOpinion , "meta.archive": true }, { sort: { 'meta.createdAt': -1 }}).fetch()
+                    ? OpinionPdfs.find({ "meta.refOpinion": refOpinion , "meta.archive": true }, { sort: { 'meta.createdAt': -1 }}).fetchAsync()
                     : OpinionPdfs.find({
                         $and:[
                             { "meta.refOpinion": refOpinion } , 
@@ -494,15 +506,26 @@ export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker( ()
                                 { "meta.archive": null },
                                 { "meta.archive": false }
                             ]}]},
-                            { sort: { 'meta.createdAt': -1 }}).fetch();
+                            { sort: { 'meta.createdAt': -1 }}).fetchAsync();
+
+     console.log("data", data);
+    
+    const opinions = [];
+    for(const file of data) {
+        const pdfs = OpinionPdfs.findOne({_id: file._id}).fetchAsync();
+        let link = pdfs && pdfs.link();
+        file.link = link;
+        opinions.push(file);
+    }
 
     return [
-        data.map( file => {
-            const pdfs = OpinionPdfs.findOne({_id: file._id});
-            let link = pdfs && pdfs.link();
-            file.link = link;
-            return file;
-        }), 
+        // data.map( async file => {
+        //     const pdfs = await OpinionPdfs.findOne({_id: file._id}).fetchAsync();
+        //     let link = pdfs && pdfs.link();
+        //     file.link = link;
+        //     return file;
+        // }), 
+        opinions,
         false
     ];
 }, [refOpinion]);

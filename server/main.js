@@ -55,19 +55,19 @@ Accounts.validateLoginAttempt( loginData => {
 });
 
 
-const sendUnreadMessages = () => {
+const sendUnreadMessages = async () => {
     // lesen aller Useractivities, die noch nicht gelesen wurden und noch nicht per E-Mail versandt sind */
-    const messages = UserActivities.find({
+    const messages = await UserActivities.findOneAsync({
         unread: true,
         $or: [
             { mailsent: { $exists: false } },
             { mailsent: false }
         ]
-    }).fetch();
+    });
 
     if (messages) {
-        messages.map( msg => {
-            const targetUser = Meteor.users.findOne(msg.refUser, { fields: { 'emails': 1, 'userData': 1 } });            
+        messages.map( async (msg) => {
+            const targetUser = await Meteor.users.findOneAsync(msg.refUser, { fields: { 'emails': 1, 'userData': 1 } });            
             const { emails, userData } = targetUser
                         
             // der Admin-User hat keine Mailadresse sondern einen Benutzernamen
@@ -95,7 +95,7 @@ const sendUnreadMessages = () => {
             }
 
             try {
-                Email.send({
+                await Email.sendAsync({
                     to: toAddress,
                     /*from: {
                         name: `${senderFirstName} ${senderLastName} (GutachtenPlus)`,
@@ -120,7 +120,7 @@ const sendUnreadMessages = () => {
                     `
                 });
 
-                UserActivities.update( msg._id, { $set: { mailsent: true } });
+                await UserActivities.updateAsync( msg._id, { $set: { mailsent: true } });
             } catch( mailErr ) {
                 console.log('Error', mailErr.message);
             }
