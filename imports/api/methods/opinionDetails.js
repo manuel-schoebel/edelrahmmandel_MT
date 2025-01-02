@@ -311,7 +311,7 @@ Meteor.methods({
      * 
      * @param {Object} detailData Object with all props of the new Detail
      */
-    'opinionDetail.insert'(detailData) {
+    async 'opinionDetail.insert'(detailData) {
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
@@ -326,7 +326,7 @@ Meteor.methods({
         if (!detailData.commentsCount) detailData.commentsCount = 0;
         if (!detailData.activitiesCount) detailData.activitiesCount = 0;
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         if (!hasPermission({ currentUser }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Erstellen eines neuen Bausteins zu einem Gutachten.');
@@ -338,7 +338,8 @@ Meteor.methods({
             detailData.actionPrio = actionCodes[detailData.actionCode].orderId;
         }
 
-        const parentDetail = detailData.refParentDetail && OpinionDetails.findOne({ _id: detailData.refParentDetail });
+        const opinionDetails = await OpinionDetails.findOneAsync({ _id: detailData.refParentDetail })
+        const parentDetail = detailData.refParentDetail && opinionDetails;
         // determine depth and parentPosition
         if (!parentDetail) {
             // if we got no Parent, we are at top level
@@ -357,7 +358,7 @@ Meteor.methods({
         let rePositionSiblings = false;
         if (!detailData.position){
             // get max position +1 to insert the detail at the end
-            const lastDetailAtSameLevel = OpinionDetails.findOne({
+            const lastDetailAtSameLevel = await OpinionDetails.findOne({
                 refOpinion: detailData.refOpinion,
                 refParentDetail: detailData.refParentDetail,
                 finallyRemoved: false
@@ -373,7 +374,7 @@ Meteor.methods({
         // now every heading will be show in ToC
         detailData.showInToC = ((detailData.type == 'HEADING' || detailData.type == 'PICTURECONTAINER')  && detailData.depth <= 2);
 
-        let detail = injectUserData({ currentUser }, {...detailData}, { created: true });
+        let detail = await injectUserData({ currentUser }, {...detailData}, { created: true });
         detail.activitiesCount = 1;
         
         if (Meteor.isServer) {
@@ -389,7 +390,7 @@ Meteor.methods({
         
         if (rePositionSiblings){
             // get max position +1 to insert the detail at the end
-            const lastDetailAtSameLevel = OpinionDetails.update({
+            const lastDetailAtSameLevel = await OpinionDetails.updateAsync({
                 refOpinion: detailData.refOpinion,
                 refParentDetail: detailData.refParentDetail,
                 finallyRemoved: false,
@@ -399,9 +400,9 @@ Meteor.methods({
             }, { multi: true });
         }
 
-        let newId = OpinionDetails.insert(detail);
+        let newId = await OpinionDetails.insertAsync(detail);
         
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: detail.refOpinion,
             refDetail: newId,
             type: 'SYSTEM-LOG',
@@ -409,7 +410,7 @@ Meteor.methods({
             message: 'Baustein wurde erstellt.'// vorher: 'Detail wurde erstellt.'
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
 
         if (Meteor.isServer) rePositionDetails(detailData.refOpinion);
     },
@@ -419,7 +420,7 @@ Meteor.methods({
      * 
      * @param {Object} opinionDetail 
      */
-    'opinionDetail.update'(opinionDetail) {
+    async 'opinionDetail.update'(opinionDetail) {
         check(opinionDetail, Object);
         check(opinionDetail.id, String);
         check(opinionDetail.data, Object);
@@ -437,10 +438,10 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const old = OpinionDetails.findOne(opinionDetail.id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const old = await OpinionDetails.findOneAsync(opinionDetail.id);
 
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: old.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -492,13 +493,13 @@ Meteor.methods({
             // if changes are happend, set spellcheck flag to false
             opinionDetail.data.spellchecked = false
 
-            const result = OpinionDetails.update(opinionDetail.id, { 
+            const result = await OpinionDetails.updateAsync(opinionDetail.id, { 
                 $set: opinionDetail.data,
                 $inc: { activitiesCount: 1 }
             });
             
             
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: old.refOpinion,
                 refDetail: opinionDetail.id,
                 type: 'SYSTEM-LOG',
@@ -507,14 +508,14 @@ Meteor.methods({
                 changes
             }, { created: true });
             
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
             
             // at last update the parentDetail with the new Content
-            const htmlChildContent = OpinionDetails.find({
+            const htmlChildContent = await OpinionDetails.find({
                 refParentDetail: old.refParentDetail,
                 deleted: false,
                 finallyRemoved: false
-            }, { fields: { htmlContent: 1 }, sort: { position: 1 } }).fetch();
+            }, { fields: { htmlContent: 1 }, sort: { position: 1 } }).fetchAsync();
 
             /*OpinionDetails.update(old.refParentDetail, { 
                 $set: {
@@ -592,7 +593,7 @@ Meteor.methods({
      * 
      * @param {String} id Id of the detail to mark as finallyRemove
      */
-    'opinionDetail.finallyRemove'(id) {
+    async 'opinionDetail.finallyRemove'(id) {
         check(id, String);
 
         this.unblock();
@@ -601,15 +602,15 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const old = OpinionDetails.findOne(id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const old = await OpinionDetails.findOneAsync(id);
 
         if (!old) {
             throw new Meteor.Error('Der angegebene Baustein mit der id ' + id + ' wurde nicht gefunden.');
         }
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: old.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -624,7 +625,7 @@ Meteor.methods({
             throw new Meteor.Error('Keine Berechtigung zum endgültigen Löschen dieses Bausteins zum Gutachten.');
         }
 
-        OpinionDetails.update(id, {
+        await OpinionDetails.updateAsync(id, {
             $set:{ 
                 finallyRemoved: true,
                 finallyRemovedByDetail: id
@@ -646,16 +647,16 @@ Meteor.methods({
                         { finallyRemovedByDetail: { $exists: false } }
                     ]}
                 ]
-            }).forEach( detail => {
-                findDetails2bUpdate(detail._id);
+            }).forEach(async detail => {
+                await findDetails2bUpdate(detail._id);
 
                 detailIds2bUpdate.push(detail._id);
             });
         }
-        findDetails2bUpdate(id);
+        await findDetails2bUpdate(id);
 
         // aktualisieren der betroffenen children Details
-        OpinionDetails.update({
+        await OpinionDetails.updateAsync({
             _id: { $in: detailIds2bUpdate }
         }, {
             $set: { 
@@ -684,7 +685,7 @@ Meteor.methods({
         else if ( title == null || title == '' )
             title = '[Baustein ohne Text]';
         
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: old.refOpinion,
             // dieser Eintrag wird beim Parent angesiedelt
             // da der eigentlich betroffene Detailpunkt gelöscht ist
@@ -701,7 +702,7 @@ Meteor.methods({
             }]
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
 
         if (Meteor.isServer) rePositionDetails(old.refOpinion);
     },
@@ -711,7 +712,7 @@ Meteor.methods({
      * 
      * @param {String} id Id of the detail to undo finallyRemove
      */
-    'opinionDetail.undoFinallyRemove'(id) {
+    async 'opinionDetail.undoFinallyRemove'(id) {
         check(id, String);
         this.unblock();
 
@@ -719,14 +720,14 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
         if ( Meteor.isServer ) {
-            let currentUser = Meteor.users.findOne(this.userId);
-            const old = OpinionDetails.findOne(id);
+            let currentUser = await Meteor.users.findOneAsync(this.userId);
+            const old = await OpinionDetails.findOneAsync(id);
             
             if (!old) {
                 throw new Meteor.Error('Der angegebene Baustein mit der id ' + id + ' wurde nicht gefunden.');
             }
             // check if opinion was sharedWith the current User
-            const shared = Opinions.findOne({
+            const shared = await Opinions.findOneAsync({
                 _id: old.refOpinion,
                 "sharedWith.user.userId": this.userId
             });
@@ -741,7 +742,7 @@ Meteor.methods({
                 throw new Meteor.Error('Keine Berechtigung zum wiederherstellen dieses Bausteins zum Gutachten.');
             }
 
-            OpinionDetails.update(id, {
+            await OpinionDetails.updateAsync(id, {
                 $set:{ 
                     finallyRemoved: false,
                     finallyRemovedByDetail: null
@@ -770,7 +771,7 @@ Meteor.methods({
             }
             findDetails2bUpdate(id);
             // aktualisieren der betroffenen children Details
-            OpinionDetails.update({
+            await OpinionDetails.updateAsync({
                 _id: { $in: detailIds2bUpdate }
             }, {
                 $set: { 
@@ -799,7 +800,7 @@ Meteor.methods({
             else if ( title == null || title == '' )
                 title = '[Baustein ohne Text]';
 
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: old.refOpinion,
                 // dieser Eintrag wird beim Parent angesiedelt
                 // da der eigentlich betroffene Detailpunkt gelöscht ist
@@ -816,7 +817,7 @@ Meteor.methods({
                 }]
             }, { created: true });
 
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
 
             //if (Meteor.isServer)
             rePositionDetails(old.refOpinion);

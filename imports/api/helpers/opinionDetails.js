@@ -21,7 +21,7 @@ export const rePositionDetails = (refOpinion, options = {}) => {
             finallyRemoved: false
         }, {
             sort: { parentPosition: 1, position: 1 }
-        }).forEach( item => {
+        }).forEach( async item => {
             const { _id, type } = item;
             
             positionCount++;
@@ -42,7 +42,7 @@ export const rePositionDetails = (refOpinion, options = {}) => {
                 data.htmlContent = renderTemplate(item, depth);
             }
 
-            OpinionDetails.update(_id, {
+            await OpinionDetails.updateAsync(_id, {
                 $set: data
             });
         });

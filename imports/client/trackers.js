@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 
@@ -304,30 +305,29 @@ export const useTest = () => useTracker(() => {
  */
 export const useActivities = (refOpinion , refDetail , currentUser) => useTracker( () => {
     console.log({refOpinion, refDetail, currentUser})
-    // const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
-    // if (!Meteor.user()) {
-    //     return noDataAvailable;
-    // }
-    // let hasRoleOPINION_CONTROL = false;
-    // if ( currentUser && currentUser.userData.roles.includes( 'OPINION_CONTROL' ) )
-    //     hasRoleOPINION_CONTROL = true;// Spezialrolle für Gutachten Kontrolle beachten.
-    // // Umstellung auf Async für Meteor Version 2.8, https://guide.meteor.com/2.8-migration
-    // //const subscription = Meteor.subscribe('activities', { refOpinion, refDetail });
-    // const subscription = Meteor.subscribe('activitiesAsync', { refOpinion , refDetail , hasRoleOPINION_CONTROL});
+    // return [ [], false ];
+    const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
+    if (!Meteor.user()) {
+        return noDataAvailable;
+    }
+    let hasRoleOPINION_CONTROL = false;
+    if ( currentUser && currentUser.userData.roles.includes( 'OPINION_CONTROL' ) )
+        hasRoleOPINION_CONTROL = true;// Spezialrolle für Gutachten Kontrolle beachten.
+    // Umstellung auf Async für Meteor Version 2.8, https://guide.meteor.com/2.8-migration
+    //const subscription = Meteor.subscribe('activities', { refOpinion, refDetail });
+    const subscription = Meteor.subscribe('activitiesAsync', { refOpinion , refDetail , hasRoleOPINION_CONTROL});
     
-    // if (!subscription.ready()) {
-    //     return noDataAvailable;
-    // }
+    if (!subscription.ready()) {
+        return noDataAvailable;
+    }
 
-    // let activities;
-    // if (refDetail) {
-    //     activities = Activities.find({ refDetail }, { sort: { createdAt: 1}}).fetch();
-    // } else {
-    //     activities = Activities.find({ refOpinion, refDetail: null }, { sort: { createdAt: 1} }).fetch();
-    // }
-
-    return [ [], false ];
-    // return [ activities, false ];
+    let activities;
+    if (refDetail) {
+        activities = Activities.find({ refDetail }, { sort: { createdAt: 1}}).fetch();
+    } else {
+        activities = Activities.find({ refOpinion, refDetail: null }, { sort: { createdAt: 1} }).fetch();
+    }
+    return [ activities, false ];
 }, [refOpinion, refDetail]);
 
 
@@ -482,50 +482,37 @@ export const useOpinionActionList = refOpinion => useTracker( () => {
 export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker(() => {
     const noDataAvailable = [ [] /*opinionPdfs*/ , true /*loading*/];
 
-    console.log('useOpinionPdfs')
-    const user = Meteor.user();
-    console.log('ujser', user);
-
     if (!Meteor.user()) {
         return noDataAvailable;
     }
     const handler = Meteor.subscribe('opinion-pdfs', refOpinion);
 
-    console.log('handler.ready()', handler.ready());
-
     if (!handler.ready()) { 
         return noDataAvailable;
     }
 
-    const data = archive
-                    ? OpinionPdfs.find({ "meta.refOpinion": refOpinion , "meta.archive": true }, { sort: { 'meta.createdAt': -1 }}).fetchAsync()
-                    : OpinionPdfs.find({
-                        $and:[
-                            { "meta.refOpinion": refOpinion } , 
-                            { $or:[
-                                { "meta.archive": null },
-                                { "meta.archive": false }
-                            ]}]},
-                            { sort: { 'meta.createdAt': -1 }}).fetchAsync();
+    let data;
 
-     console.log("data", data);
-    
-    const opinions = [];
-    for(const file of data) {
-        const pdfs = OpinionPdfs.findOne({_id: file._id}).fetchAsync();
-        let link = pdfs && pdfs.link();
-        file.link = link;
-        opinions.push(file);
+    if(archive) {
+        data = OpinionPdfs.find({ "meta.refOpinion": refOpinion , "meta.archive": true }, { sort: { 'meta.createdAt': -1 }})
+    } else {
+        data = OpinionPdfs.find({
+            $and:[
+                { "meta.refOpinion": refOpinion } , 
+                { $or:[
+                    { "meta.archive": null },
+                    { "meta.archive": false }
+                ]}]},
+                { sort: { 'meta.createdAt': -1 }});
     }
 
     return [
-        // data.map( async file => {
-        //     const pdfs = await OpinionPdfs.findOne({_id: file._id}).fetchAsync();
-        //     let link = pdfs && pdfs.link();
-        //     file.link = link;
-        //     return file;
-        // }), 
-        opinions,
+        data.cursor.map( async file => {
+            const pdfs = await OpinionPdfs.findOneAsync({_id: file._id});
+            let link = pdfs && pdfs.link();
+            file.link = link;
+            return file;
+        }), 
         false
     ];
 }, [refOpinion]);
@@ -536,22 +523,38 @@ export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker(() 
  * 
  * @param {String} userId   Specifies the user
  */
-export const useAvatar = userId => useTracker( () => {
-    const noDataAvailable = [ null /*avatar*/ , true /*loading*/];
+// export const useAvatar = userId => useTracker( () => {
+//     const noDataAvailable = [ null /*avatar*/ , true /*loading*/];
 
-    if (!Meteor.user()) {
-        return noDataAvailable;
-    }
-    const handler = Meteor.subscribe('avatar', userId);
+//     if (!Meteor.user()) {
+//         return noDataAvailable;
+//     }
+//     const handler = Meteor.subscribe('avatar', userId);
 
-    if (!handler.ready()) { 
-        return noDataAvailable;
-    }
+//     if (!handler.ready()) { 
+//         return noDataAvailable;
+//     }
 
-    const avatar = Avatars.findOne({ userId });
+//     const avatar = Avatars.findOne({ userId });
 
-    return [
-        avatar ? avatar.link() : null,
-        false
-    ];
-}, [userId]);
+//     return [
+//         avatar ? avatar.link() : null,
+//         false
+//     ];
+// }, [userId]);
+
+export const useAvatar = userId => {
+
+    const [userAvatarLink, setAvatarLink] = useState(null);
+    useEffect(() => {
+        async function loadAvatar() {
+            console.log('wait to load....')
+            const avatar = await Avatars.findOneAsync({ userId });
+            console.log('avatar', {avatar, userId});
+            setAvatarLink(avatar?.link() || null);
+        }
+        loadAvatar()
+    }, [userId]);
+
+    return [userAvatarLink, false]
+}

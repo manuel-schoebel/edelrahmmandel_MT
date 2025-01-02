@@ -1,5 +1,4 @@
 import { Meteor } from 'meteor/meteor';
-import { Mongo } from 'meteor/mongo';
 import { check, Match } from 'meteor/check';
 
 import { Opinions } from '../../imports/api/collections/opinions';
@@ -17,6 +16,7 @@ import { Activities } from '../../imports/api/collections/activities';
 import { hasPermission, injectUserData } from '../../imports/api/helpers/roles';
 
 import fs from 'fs';
+import { readFile } from 'fs/promises';
 
 import fs_extra from 'fs-extra';
 
@@ -25,9 +25,6 @@ import moment from 'moment';
 import { Sifter, Renderer } from 'tabulatore';
 
 //import pdfence from 'pdfence';
-
-const readFile = Meteor.wrapAsync(fs.readFile, fs);
-const writePdf = Meteor.wrapAsync(OpinionPdfs.write, OpinionPdfs);
 
 const settings = JSON.parse(process.env.MGP_SETTINGS);
 
@@ -567,7 +564,7 @@ Meteor.methods({
      * @param {String} refOpinion Specifies the opinion
      * @param {String} PDFId Specifies the PDF
      */
-     'opinions.deletePDF'(refOpinion, PDFId) {
+     async 'opinions.deletePDF'(refOpinion, PDFId) {
         check(refOpinion, String);
         check(PDFId, String);
 
@@ -575,10 +572,10 @@ Meteor.methods({
             throw new Meteor.Error('Not Authorized.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -594,7 +591,7 @@ Meteor.methods({
             throw new Meteor.Error('Sie besitzen keine Berechtigung für das Löschen von PDFs.');
         }
 
-        OpinionPdfs.remove({_id: PDFId}, (error) => {
+        await OpinionPdfs.removeAsync({_id: PDFId}, (error) => {
             if (error) {
               console.error(`File wasn't removed, error:  ${error.reason}`);
             } else {
@@ -603,14 +600,14 @@ Meteor.methods({
         });
 
         // post a new activity to this opinion
-        const activity = injectUserData({ currentUser }, {
+        const activity = await injectUserData({ currentUser }, {
             refOpinion,
             refDetail: null,
             type: 'SYSTEM-POST',
             message: `hat das PDF mit ID <strong>${PDFId}</strong> GELÖSCHT.`
         }, { created: true });
         
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
     },
 
     /**
@@ -892,9 +889,9 @@ Meteor.methods({
             });
         });
 
-        const images = Images.find({
+        const images = await Images.find({
             'meta.refOpinion': refOpinion
-        }).fetch();
+        }).fetchAsync();
         
         let fileData, fileRef;
 
@@ -907,7 +904,7 @@ Meteor.methods({
                 filename = await opinionDocumenter.pdfCreate(opinion, details, sortedDetailsTodolist, images , settings.PdfPath, opinion.hasAbbreviationsPage);
             }
 
-            fileData = readFile(filename);
+            fileData = await readFile(filename);
 
             /*if ( iProtected && !previewOnly ) {
                 // Verschlüsselung...
@@ -923,7 +920,7 @@ Meteor.methods({
             }*/
 
             ///**/OpinionPdfs.config.storagePath = storagePath.config.storagePath + '/12345';
-            fileRef = writePdf(fileData, {
+            fileRef = await OpinionPdfs.write(fileData, {
                 fileName: `${refOpinion}.pdf`,
                 type: 'application/pdf',
                 meta: {
@@ -942,8 +939,8 @@ Meteor.methods({
 
             if (previewOnly) {
                 // löschen der Previewversion
-                Meteor.setTimeout(() => {
-                    OpinionPdfs.remove({_id: fileRef._id});
+                Meteor.setTimeout(async () => {
+                    await OpinionPdfs.removeAsync({_id: fileRef._id});
                 }, 1000 * 60 /* 1 Minute */)
             }
 
@@ -951,8 +948,8 @@ Meteor.methods({
         } catch (err) {
             throw new Meteor.Error(err);
         }
-
-        const result = OpinionPdfs.findOne({_id:fileRef._id}).link(); 
+        const opinionPdf = await OpinionPdfs.findOneAsync({_id:fileRef._id}); 
+        const result = opinionPdf.link()
         //if (previewOnly) {
             return result;
         //}
