@@ -16,6 +16,7 @@ export const Expert = ({ user, showFull = true, onlyAvatar }) => {
     const { userId, firstName, lastName, company, position, qualification, advancedQualification } = user;
     // const [ userAvatarLink, isLoadingAvatar ] = useAvatar(userId);
 
+    // TODO: avatar handling - though it will be deleted so might not worth touching this code again
     const avatar = useTracker(() => {
         const handler = Meteor.subscribe('avatar', userId);
         if (!handler.ready()) {
@@ -25,14 +26,10 @@ export const Expert = ({ user, showFull = true, onlyAvatar }) => {
         return Avatars.findOneAsync({ userId: userId });
       }, [userId]);
 
-      console.log('avatar from tracker', avatar)
-
     const [userAvatarLink, setAvatarLink] = useState(null);
     useEffect(() => {
         async function loadAvatar() {
-            console.log('loading avatar')
             const avatar = await Avatars.findOneAsync({ userId });
-            console.log('avatar', {avatar, userId});
             setAvatarLink(avatar?.link() || null);
         }
         loadAvatar()
