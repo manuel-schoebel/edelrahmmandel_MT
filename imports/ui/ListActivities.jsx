@@ -149,8 +149,6 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
         );
     }
 
-    console.log('render ListActivities', activities);
-
     return (
         <div className="mbac-activities-sider">
             <div style={{height:55}}>

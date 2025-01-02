@@ -170,7 +170,7 @@ Meteor.methods({
             throw new Meteor.Error(err.message);
         }
         
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
         
         if (activity.refDetail) {
             await OpinionDetails.updateAsync(activity.refDetail, {
@@ -193,13 +193,13 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
 
-        const currentUser = await Meteor.users.findOne(this.userId);
+        const currentUser = await Meteor.users.findOneAsync(this.userId);
         
-        const activity = await Activities.findOne(refActivity);
-        const opinionDetail = await OpinionDetails.findOne(activity.refDetail);
+        const activity = await Activities.findOneAsync(refActivity);
+        const opinionDetail = await OpinionDetails.findOneAsync(activity.refDetail);
 
         // check if opinion was sharedWith the current User
-        const sharedOpinion = await Opinions.findOne({
+        const sharedOpinion = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
