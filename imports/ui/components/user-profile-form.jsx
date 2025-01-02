@@ -77,25 +77,28 @@ export class UserProfileForm extends React.Component {
 
         const newAvatar = file; //fileList[0].originFileObj;
 
-        const uploadImage = file => {
-            Avatars.find({ userId: currentUser._id }).remove();
+        const uploadImage = async file => {
+            const result = await Avatars.remove({ userId: currentUser._id });
 
-            const upload = Avatars.insert({
-                file,
-                streams: 'dynamic',
-                chunkSize: 'dynamic',
-                meta: { userId: currentUser._id }
-            }, false);
-
-            upload.on('end', function (error, fileObj) {
-                if (error) {
-                    message.error(`Fehler beim Upload: ${error}`);
-                } else {
-                    //console.log(`File successfully uploaded`, fileObj);
-                }
-            });
-
-            upload.start();
+            try{
+                const upload = await Avatars.insert({
+                    file,
+                    chunkSize: 'dynamic',
+                    meta: { userId: currentUser._id }
+                }, false);
+    
+                upload.on('end', function (error, fileObj) {
+                    if (error) {
+                        message.error(`Fehler beim Upload: ${error}`);
+                    } else {
+                        //console.log(`File successfully uploaded`, fileObj);
+                    }
+                });
+    
+                upload.start();
+            } catch(e) {
+                throw e
+            }
         }
 
         //uploadImage(newAvatar);

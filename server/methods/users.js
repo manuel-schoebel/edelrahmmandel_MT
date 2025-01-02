@@ -516,14 +516,14 @@ Meteor.methods({
      * 
      * @param {Object} data 
      */
-    'users.updateProfile'(data) {
+    async 'users.updateProfile'(data) {
         if (!this.userId) {
             throw new Meteor.Error('Not Authorized.');
         }
 
-        const oldUser = Meteor.users.findOne(this.userId);
+        const oldUser = await Meteor.users.findOneAsync(this.userId);
 
-        Meteor.users.update(this.userId, {
+        await Meteor.users.updateAsync(this.userId, {
             $set: { 
                 userData: { ...data, roles: oldUser.userData.roles }
             }
@@ -534,7 +534,7 @@ Meteor.methods({
             oldUser.userData.firstName !== data.firstName || 
             oldUser.userData.lastName !== data.lastName
         ) {
-            Opinions.update({
+            await Opinions.updateAsync({
                 'sharedWith.user.userId': this.userId
             }, {
                 $set: { 
@@ -542,7 +542,7 @@ Meteor.methods({
                 }
             }, { multiple: true });
 
-            Activities.update({
+            await Activities.updateAsync({
                 'createdBy.userId': this.userId
             }, {
                 $set: { 
@@ -551,7 +551,7 @@ Meteor.methods({
                 }
             }, { multiple: true });
 
-            Activities.update({
+            await Activities.updateAsync({
                 'answers.createdBy.userId': this.userId
             }, {
                 $set: { 
@@ -561,7 +561,7 @@ Meteor.methods({
             }, { multiple: true });
         }
 
-        Opinions.update({
+        await Opinions.updateAsync({
             'expert1.userId': this.userId
         }, {
             $set: { 
@@ -569,7 +569,7 @@ Meteor.methods({
             }
         }, { multiple: true });
 
-        Opinions.update({
+        await Opinions.updateAsync({
             'expert2.userId': this.userId
         }, {
             $set: { 
