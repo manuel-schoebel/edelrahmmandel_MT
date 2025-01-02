@@ -304,7 +304,6 @@ export const useTest = () => useTracker(() => {
  * @param {String} refDetail    id of the OpinionDetail
  */
 export const useActivities = (refOpinion , refDetail , currentUser) => useTracker( () => {
-    console.log({refOpinion, refDetail, currentUser})
     // return [ [], false ];
     const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
     if (!Meteor.user()) {
@@ -548,9 +547,7 @@ export const useAvatar = userId => {
     const [userAvatarLink, setAvatarLink] = useState(null);
     useEffect(() => {
         async function loadAvatar() {
-            console.log('wait to load....')
             const avatar = await Avatars.findOneAsync({ userId });
-            console.log('avatar', {avatar, userId});
             setAvatarLink(avatar?.link() || null);
         }
         loadAvatar()

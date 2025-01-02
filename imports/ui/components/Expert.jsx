@@ -20,7 +20,6 @@ export const Expert = ({ user, showFull = true, onlyAvatar }) => {
     const avatar = useTracker(() => {
         const handler = Meteor.subscribe('avatar', userId);
         if (!handler.ready()) {
-          console.log('Subscription is not ready yet.');
           return null;
         }
         return Avatars.findOneAsync({ userId: userId });
