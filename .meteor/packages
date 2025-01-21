@@ -16,7 +16,7 @@ typescript@5.4.3              # Enable TypeScript syntax in .ts and .tsx modules
 shell-server@0.6.0            # Server-side component of the `meteor shell` command
 
 static-html@1.4.0             # Define static page content in .html files
-react-meteor-data       # React higher-order component for reactively tracking Meteor data
+react-meteor-data@3.0.3       # React higher-order component for reactively tracking Meteor data
 less
 accounts-password@3.0.2
 kadira:flow-router

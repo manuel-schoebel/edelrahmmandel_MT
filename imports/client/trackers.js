@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { useTracker } from 'meteor/react-meteor-data';
+import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 
 import { OpinionDetails } from '../api/collections/opinionDetails';
 import { Opinions } from '../api/collections/opinions';
@@ -84,22 +84,11 @@ export const useAllUsersForAdmin = () => useTracker( () => {
  * Reactive Roles handling
  * 
  */
-export const useRoles = () => useTracker( () => {
-    const noDataAvailable = [ [] /*Roles*/ , true /*loading*/];
-
-    if (!Meteor.user()) {
-        return noDataAvailable;
-    }
-    const subscription = Meteor.subscribe('roles');
-
-    if (!subscription.ready()) { 
-        return noDataAvailable;
-    }
-
-    const roles = Roles.find({}, { sort: {title: 1}}).fetch();
-
-    return [roles, false];
-});
+export const useRoles = () => {
+    const isLoadingRoles = useSubscribe("roles");
+    const roles = useTracker(() => Roles.find({}, {sort: {title: 1}}).fetch());
+    return [roles, isLoadingRoles()];
+};
 
 /**
  * Reactive Layouttypes

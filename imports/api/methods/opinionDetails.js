@@ -112,8 +112,8 @@ Meteor.methods({
         // Prüfen ob es untergeordnete Details gibt, die ebenfalls gelöscht werden müssen
         // hierbei wird die ID vermerkt, welche für die Löschung verantwortlich ist als Kennung,
         // dass die Löschung automatisiert erfolgte
-        findDetails2bUpdate = refDetail => {
-            OpinionDetails.find({
+        const findDetails2bUpdate = async refDetail => {
+            const opionionDetails = await OpinionDetails.find({
                 $and: [
                     { refParentDetail: refDetail },
                     { deleted: opinionDetail.deleted },
@@ -123,16 +123,16 @@ Meteor.methods({
                         { deletedByDetail: { $exists: false } }
                     ]}
                 ]
-            }).forEach( detail => {
-                findDetails2bUpdate(detail._id);
-
+            }).fetchAsync();
+            opionionDetails.forEach(async detail => {
+                await findDetails2bUpdate(detail._id);
                 detailIds2bUpdate.push(detail._id);
             });
         }
-        findDetails2bUpdate(id);
+        await findDetails2bUpdate(id);
 
         // aktualisieren der betroffenen children Details
-        OpinionDetails.update({
+        await OpinionDetails.updateAsync({
             _id: { $in: detailIds2bUpdate }
         }, {
             $set: { 
@@ -141,7 +141,7 @@ Meteor.methods({
             }
         }, { multi: true });
 
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: opinionDetail.refOpinion,
             refDetail: id._str || id,
             type: 'SYSTEM-LOG',
@@ -155,7 +155,7 @@ Meteor.methods({
             }]
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
     },
 
     /**

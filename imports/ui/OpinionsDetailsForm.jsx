@@ -11,6 +11,7 @@ import Button from 'antd/lib/button';
 import Switch from 'antd/lib/switch';
 //import Icon from 'antd/lib/icon';
 import Tooltip from 'antd/lib/tooltip';
+import { useParams } from "react-router";
 
 const { Content } = Layout;
 
@@ -45,10 +46,11 @@ import { useAppState } from '../client/AppState';
 
 
 
-export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
+export const OpinionsDetailsForm = ({refDetail, currentUser}) => {
+    const { opinionId } = useParams();
     const { hasAdminRole , hasRoleOPINION_CONTROL } = useAccount();
-    const [opinion, opinionIsLoading] = useOpinion(refOpinion , hasRoleOPINION_CONTROL );
-    const [detail, detailIsLoading] = useOpinionDetail(refOpinion, refDetail);
+    const [opinion, opinionIsLoading] = useOpinion(opinionId , hasRoleOPINION_CONTROL );
+    const [detail, detailIsLoading] = useOpinionDetail(opinionId, refDetail);
 
     const [ canEdit, setCanEdit ] = useState(false);
     const [ canDelete, setCanDelete ] = useState(false);
@@ -82,14 +84,14 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
     const createToDoCSVExport = () => {
         return () => {
             setPendingCSVExport( true );
-            Meteor.call( 'opinion.ToDoCSVExport' , refOpinion , ( err , res ) => {
+            Meteor.call( 'opinion.ToDoCSVExport' , opinionId , ( err , res ) => {
                 if ( err )
                     console.log( err );
 
                 if ( res != '' ) {
                     let elemx = document.createElement('a');
                     elemx.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent( res );
-                    elemx.download = 'OPL_' + String( refOpinion ) + '.csv';
+                    elemx.download = 'OPL_' + String( opinionId ) + '.csv';
                     elemx.style.display = 'none';
                     document.body.appendChild( elemx );
                     elemx.click();
@@ -105,7 +107,7 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
         return () => {
             setPendingPdfCreation(true);
 
-            Meteor.call('opinion.createPDF', refOpinion, previewOnly, iProtected, (err, res) => {
+            Meteor.call('opinion.createPDF', opinionId, previewOnly, iProtected, (err, res) => {
                 console.log(res);
                 if (err) console.log(err);
         
@@ -145,7 +147,7 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
 
     const createLivePdfPreview = () => {
         setPreviewUrlBusy(true);
-        Meteor.call('opinion.createPDF', refOpinion, 'livepreview', (err, url) => {
+        Meteor.call('opinion.createPDF', opinionId, 'livepreview', (err, url) => {
             setPreviewUrlBusy(false);
             if (!err) setPreviewUrl(url);
         });
@@ -221,7 +223,7 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
                     pageHeaderButtons.push(
                         <ModalOpinion key="general"
                             mode="EDIT"
-                            refOpinion={refOpinion}
+                            refOpinion={opinionId}
                         />
                     );
                 } else if (activeTabPane == 'PDF') {
@@ -260,7 +262,7 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
                         
                     );*/
                 } else if (activeTabPane == 'SHARE' && canShare) {
-                    pageHeaderButtons.push(<ModalShareWith key="share" refOpinion={refOpinion} canShareWithExplicitRole={canShareWithExplicitRole} adminUser={hasAdminRole} />);
+                    pageHeaderButtons.push(<ModalShareWith key="share" refOpinion={opinionId} canShareWithExplicitRole={canShareWithExplicitRole} adminUser={hasAdminRole} />);
                         /*<Button type="dashed" onClick={null}>
                             <ShareAltOutlined /> Dokument teilen
                         </Button>*/
@@ -270,7 +272,7 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
             if (canEdit && detail && layouttypesObject[detail.type].isPictureable) {
                 pageHeaderButtons.push(
                     <ModalSortPictures key="sortpicture"
-                        refOpinion={refOpinion}
+                        refOpinion={opinionId}
                         refParentDetail={detail.refParentDetail}
                         refDetail={detail._id}
                     />
@@ -280,7 +282,7 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
                 pageHeaderButtons.push(
                     <ModalFileUpload key="fileupload"
                         mode="EDIT"
-                        refOpinion={refOpinion}
+                        refOpinion={opinionId}
                         refParentDetail={detail.refParentDetail}
                         refDetail={detail._id}
                     />
@@ -303,17 +305,15 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
         
         return opinion.title;
     }
-    
     return (
         <Layout>
             <Content>
                 <Affix className="affix-opiniondetail" offsetTop={0}>
                     <div style={{paddingTop:8}}>
                         <OpinionBreadcrumb
-                            refOpinion={refOpinion}
+                            refOpinion={opinionId}
                             refDetail={refDetail}
                         />
-
                         <PageHeader
                             className="site-page-header"
                             onBack={() => history.back()}
@@ -326,11 +326,11 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
                 <Content>
                     { refDetail === null
                         ? <OpinionContent 
-                            refOpinion={refOpinion} currentUser={currentUser} 
+                            refOpinion={opinionId} currentUser={currentUser} 
                             canEdit={canEdit} canDelete={canDelete} canCancelShareWith={canCancelShare} canShareWithExplicitRole={canShareWithExplicitRole}
                             onTabPaneChanged={tabPaneChanged} >
                                 <ListOpinionDetails
-                                    refOpinion={refOpinion} 
+                                    refOpinion={opinionId} 
                                     refParentDetail={refDetail}
                                     currentUser={currentUser}
                                     canEdit={canEdit}
@@ -338,10 +338,10 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
                                 />
                           </OpinionContent>
                         : detail && detail.type === 'TODOLIST'
-                            ? <ActionTodoList refOpinion={refOpinion} />
+                            ? <ActionTodoList refOpinion={opinionId} />
                             : (detail && layouttypesObject[detail.type].hasChilds) || refDetail === null
                                 ? <ListOpinionDetails
-                                        refOpinion={refOpinion} 
+                                        refOpinion={opinionId} 
                                         refParentDetail={refDetail}
                                         currentUser={currentUser}
                                         canEdit={canEdit}
@@ -364,7 +364,6 @@ export const OpinionsDetailsForm = ({refOpinion, refDetail, currentUser}) => {
                 */}
                 </Content>
             </Content>
-
             { visiblePdfPreview && pdfPreviewData
                 ? <Fragment>
                     <iframe src={pdfPreviewData}

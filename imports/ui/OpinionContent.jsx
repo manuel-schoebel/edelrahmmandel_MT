@@ -243,7 +243,6 @@ export const OpinionContent = ({refOpinion, currentUser, canEdit=false, canDelet
     // Breite der PDF-Vorschau dynamisch 30 % der Gesamtbreite
     let pdfWidth = window.innerWidth;
     pdfWidth *= 0.3;
-
     const items = [
         {
             key: "DOCUMENT",

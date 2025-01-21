@@ -7,6 +7,7 @@
     "test-app": "TEST_WATCH=1 meteor test --full-app --driver-package meteortesting:mocha",
     "visualize": "meteor --production --extra-packages bundle-visualizer"
   },
+  "postinstall": "patch-package",
   "dependencies": {
     "@dnd-kit/core": "^6.0.8",
     "@dnd-kit/sortable": "^7.0.2",
@@ -26,11 +27,13 @@
     "meteor-node-stubs": "^1.2.9",
     "moment": "^2.29.4",
     "opinion-documenter": "^1.0.56",
+    "patch-package": "^8.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-lines-ellipsis": "^0.14.1",
     "react-mounter": "^1.2.0",
     "react-pdf": "^5.7.2",
+    "react-router": "7.1.1",
     "react-sortable-hoc": "^1.11.0",
     "simpl-schema": "^1.13.1",
     "tabulatore": "^1.0.2"

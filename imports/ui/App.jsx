@@ -1,18 +1,21 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import Spin from 'antd/lib/spin';
+import { Routes, Route } from "react-router";
 
 import { LoginForm } from '/imports/ui/LoginForm';
 import { SiteLayout } from '/imports/ui/SiteLayout';
 import { useAccount, useRoles } from '../client/trackers';
 import { useAppState } from '../client/AppState';
-
+import { Home } from './Home';
+import { InfoForm } from './Info';
+import { OpinionsForm } from './OpinionsForm';
+import { OpinionsDetailsForm } from './OpinionsDetailsForm';
 
 
 export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) => {
     const { currentUser, isLoggedIn, accountsReady, hasAdminRole } = useAccount();
-    const { roles, rolesLoading } = useRoles();
-    
+    const [roles, isLoadingRoles] = useRoles();
     const [ appIsBusy ] = useAppState('appIsBusy');
 
     var keys = {37: 1, 38: 1, 39: 1, 40: 1, 27:1, 83:1, 115:1 };
@@ -70,12 +73,8 @@ export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) =
         }
     }, [appIsBusy]);
 
-    if (!accountsReady) {
+    if (!accountsReady || isLoadingRoles) {
         return <Spin size="large" />
-    }
-
-    if (!props.authenticatedRoute) {
-        return React.createElement(content, { ...props });
     }
 
     if (!isLoggedIn) {
@@ -90,30 +89,20 @@ export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) =
         }
     }*/
 
-    return (
-        <Fragment>
-            <div className="mbac-busy-action" style={{display:appIsBusy?'block':'none'}} /*onScroll={avoidUserActionWhenBusy}*/>
-                <div className="mbac-loading-spinner">
-                    <div style={{margin:32,padding:32,backgroundColor:'orange',borderRadius:500,border:'20px solid black'}}>
-                        <Spin size="large" style={{marginLeft:16}}/>
-                        <br/>
-                        <span>{appIsBusy}</span>
-                    </div>
-                </div>
-            </div>
 
-            <SiteLayout 
-                activeMenuKey={activeMenuKey}
+    return (
+        <Routes>
+            <Route element={<SiteLayout activeMenuKey={activeMenuKey}
                 refOpinion={refOpinion}
                 refDetail={refDetail}
                 currentUser={currentUser}
                 hasAdminRole={hasAdminRole}
-            >
-                {
-                    //content || null
-                    React.createElement(content || null, { refOpinion, refDetail, currentUser })
-                }
-            </SiteLayout>
-        </Fragment>
-    );
+            />}>
+                <Route index element={<Home />} />
+                <Route path="info" element={<InfoForm />} />
+                <Route path="opinions" element={<OpinionsForm currentUser={currentUser} />} />
+                <Route path="opinions/:opinionId" element={<OpinionsDetailsForm refDetail={null} currentUser={currentUser}/>} />
+            </Route>
+        </Routes>
+    )
 }   

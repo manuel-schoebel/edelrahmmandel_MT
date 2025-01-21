@@ -1,13 +1,19 @@
-import './routes';
+//import './routes';
 import './css/summernote-lite.min.css';
 import '../imports/api/methods';
 
 import React from 'react';
 import { Meteor } from 'meteor/meteor';
-import { render } from 'react-dom';
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router";
 
 import { App } from '/imports/ui/App';
 
+const root = document.getElementById("react-root");
 Meteor.startup(() => {
-    render(<App/>, document.getElementById('react-root'));
+    ReactDOM.createRoot(root).render(
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      );
 });

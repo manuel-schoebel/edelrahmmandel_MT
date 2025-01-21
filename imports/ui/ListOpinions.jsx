@@ -17,6 +17,7 @@ import { MediaQuery, useMediaQueries } from '../client/mediaQueries';
 import Input from 'antd/lib/input';
 
 import Switch from 'antd/lib/switch';
+import { Link } from 'react-router';
 
 const lower = a => {
     if (!a) return '';
@@ -86,14 +87,14 @@ export const ListOpinions = ({currentUser}) => {
             title: 'Titel',
             dataIndex: 'title',
             key: 'title',
-            render: (text, row) => <a href={"/opinions/" + row._id}>
+            render: (text, row) => <Link to={"/opinions/" + row._id}>
                 <Tooltip title="Gutachten öffnen">
                     <Space>
                         {text}
                         {row.isTemplate ? <Tag color="green">Vorlage</Tag> : null}
                     </Space>
                 </Tooltip>
-            </a>,
+            </Link>,
             sorter: (a, b) => lower(a.title).localeCompare(lower(b.title)),
         },
         {
@@ -198,7 +199,7 @@ export const ListOpinions = ({currentUser}) => {
                         <List.Item>
                             <List.Item.Meta
                                 title={
-                                    <a href={"/opinions/" + opinion._id}>
+                                    <Link to={"/opinions/" + opinion._id}>
                                         <Space>
                                             {opinion.title}
                                             {
@@ -207,7 +208,7 @@ export const ListOpinions = ({currentUser}) => {
                                                     : null
                                             }
                                         </Space>
-                                    </a>}
+                                    </Link>}
                                 description={('Nr. ' + opinion.opinionNo + ' - ' + opinion.description + ' - ' + opinion.customer.name + ', ' + opinion.customer.city)}
                             />
                         </List.Item>

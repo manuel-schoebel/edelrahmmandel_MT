@@ -4,6 +4,7 @@ import Breadcrumb from 'antd/lib/breadcrumb';
 import Space from 'antd/lib/space';
 import Affix from 'antd/lib/affix';
 import Layout from 'antd/lib/layout';
+import { Link, NavLink } from "react-router";
 
 const { Content } = Layout;
 
@@ -25,10 +26,10 @@ export const OpinionsForm = ({currentUser}) => {
                     <div>
                         <Breadcrumb>
                             <Breadcrumb.Item>
-                                <a href="/">Start</a>
+                                <Link to="/">Start</Link>
                             </Breadcrumb.Item>
                             <Breadcrumb.Item>
-                                <a href="">Gutachten</a>
+                                <Link to="#">Gutachten</Link>
                             </Breadcrumb.Item>
                         </Breadcrumb>
 

@@ -33,42 +33,37 @@ export const ModalOpinion = ( { mode /*EDIT|NEW*/, refOpinion, buttonCaption, bu
 
     const [ form ] = useForm();
 
-    const handleResult = (err, res) => {
-        if (err) {
-            // do somthing to show error
-            return Modal.error({
-                title: 'Fehler',
-                content: 'Es ist ein interner Fehler aufgetreten. ' + err.message
-            });
+    const handleOk = async e => {
+        const values = await form.validateFields();
+        // change undefined values to null,
+        // so that these values could be transferd via ddp and
+        // stored in the database/document
+        Object.keys(values).map(k => values[k] === undefined ? values[k] = null : null);
+        
+        if (values.dateFromTill) {
+            // transform dateFromTill
+            values.dateFrom = values.dateFromTill[0].toDate();
+            values.dateTill = values.dateFromTill[1].toDate();
+            delete values.dateFromTill;
         }
 
-        form.resetFields();
-        setShowModal(false);    
-    }
-
-    const handleOk = e => {
-        form.validateFields().then( values => {
-            // change undefined values to null,
-            // so that these values could be transferd via ddp and
-            // stored in the database/document
-            Object.keys(values).map(k => values[k] === undefined ? values[k] = null : null);
-            
-            if (values.dateFromTill) {
-                // transform dateFromTill
-                values.dateFrom = values.dateFromTill[0].toDate();
-                values.dateTill = values.dateFromTill[1].toDate();
-                delete values.dateFromTill;
-            }
-
+        try{
             if (mode === 'EDIT') {
-                Meteor.call('opinion.update', refOpinion, values, handleResult);
+                await Meteor.callAsync('opinion.update', refOpinion, values);
             } else {
                 if (createTemplate) {
                     values.isTemplate = true;
                 }
-                Meteor.call('opinion.insert', values, handleResult);
+                await Meteor.callAsync('opinion.insert', values);
             }
-        });
+            form.resetFields();
+            setShowModal(false);
+        } catch(err) {
+            return Modal.error({
+                title: 'Fehler',
+                content: 'Es ist ein interner Fehler aufgetreten. ' + err.message
+            });
+        } 
     }
 
     const handleCancel = e => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppState } from '../../client/AppState';
-import { FlowRouter } from 'meteor/kadira:flow-router';
+import { useNavigate } from "react-router";
 
 import message from 'antd/lib/message';
 import Modal from 'antd/lib/modal';
@@ -9,12 +9,13 @@ import ExclamationCircleOutlined from '@ant-design/icons/ExclamationCircleOutlin
 
 export const Link = props => {
     const { href, children, onClick, canCancel } = props;
+    let navigate = useNavigate();
 
     const go = () => {
         if (onClick) {
             if (onClick() === false) return;
         }
-        if (href) FlowRouter.go(href);
+        if (href) navigate(href);
     }
 
     const discardAndGo = () => {

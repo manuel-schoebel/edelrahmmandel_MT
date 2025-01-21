@@ -63,11 +63,10 @@ export const hasPermission = async ({ userId, currentUser, sharedRole }, permiss
         roles = ['EVERYBODY'];
 
     let isPermitted = 0;
-    const assignedRoles = await Roles.find({ _id: { $in: roles } }).fetchAsync()
+    const assignedRoles = await Roles.find({ _id: { $in: roles } }).fetchAsync();
     for(const role of assignedRoles) {
         if (isRolePermitted(permissionName, role)) isPermitted++;
     }
-
     return isPermitted > 0;
 }
 

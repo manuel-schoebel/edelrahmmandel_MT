@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Outlet } from 'react-router';
 
 import { ListActivities } from './ListActivities';
 
@@ -145,7 +146,7 @@ export const SiteLayout = props => {
                     
                 </Header>
                 <Content className="site-layout-content">
-                    { props.children }
+                    <Outlet />
                 </Content>
                 
             </Layout>
