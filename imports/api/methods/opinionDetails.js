@@ -218,18 +218,18 @@ Meteor.methods({
      * 
      * @param {String} refDetail Specifies the OpinionDetail
      */
-    'opinionDetail.checkAnswer'(refDetail) {
+    async 'opinionDetail.checkAnswer'(refDetail) {
         check(refDetail, String);
 
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const opinionDetail = OpinionDetails.findOne(refDetail);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const opinionDetail = await OpinionDetails.findOneAsync(refDetail);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: opinionDetail.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -250,14 +250,14 @@ Meteor.methods({
         }
 
         // save the old parent opinionDetail for the log
-        oldParentDetail = OpinionDetails.findOne(opinionDetail.refParentDetail);
+        const oldParentDetail = await OpinionDetails.findOneAsync(opinionDetail.refParentDetail);
 
         if (!oldParentDetail) {
             throw new Meteor.Error('Der Vorgang CheckAnswer wird abgebrochen. Es konnte das Parent-Element zu diesem Baustein nicht gefunden werden. Bitte wenden Sie sich an Ihren Systemadministrator.');
         }
 
         // update the parent
-        OpinionDetails.update( { _id: opinionDetail.refParentDetail }, {
+        await OpinionDetails.updateAsync( { _id: opinionDetail.refParentDetail }, {
             $set: {
                 actionCode: opinionDetail.actionCode,
                 actionText: opinionDetail.actionText,
@@ -266,7 +266,7 @@ Meteor.methods({
         });
 
         // update all siblings from type answer
-        OpinionDetails.update( { 
+        await OpinionDetails.updateAsync( { 
             _id: { $ne: opinionDetail._id },
             refParentDetail: opinionDetail.refParentDetail,
             type: 'ANSWER'
@@ -277,7 +277,7 @@ Meteor.methods({
             }
         }, { multi:true });
 
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: opinionDetail.refOpinion,
             // dieser Eintrag wird beim Parent angesiedelt
             // da der eigentlich betroffene Detailpunkt nicht verändert wurde
@@ -303,7 +303,7 @@ Meteor.methods({
             }]
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
     },
 
     /**
@@ -399,7 +399,7 @@ Meteor.methods({
                 $inc: { position: 1 }
             }, { multi: true });
         }
-
+        console.debug('insertAsync')
         let newId = await OpinionDetails.insertAsync(detail);
         
         let activity = await injectUserData({ currentUser }, {
@@ -497,7 +497,6 @@ Meteor.methods({
                 $set: opinionDetail.data,
                 $inc: { activitiesCount: 1 }
             });
-            
             
             let activity = await injectUserData({ currentUser }, {
                 refOpinion: old.refOpinion,
