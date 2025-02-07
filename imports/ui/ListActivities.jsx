@@ -20,10 +20,12 @@ import { hasPermission } from '../api/helpers/roles';
 
 import { FlowRouter } from 'meteor/kadira:flow-router';
 import { Expert } from './components/Expert';
+import { useSearchParams, useLocation } from 'react-router';
 
 export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } ) => {
     const [ opinion, opinionIsLoading ] = useOpinion(refOpinion);
-    const [ activities, activitiesLoading ] = useActivities(refOpinion, FlowRouter.getQueryParam('activitiesBy') || refDetail , currentUser );
+    let [searchParams] = useSearchParams();
+    const [ activities, activitiesLoading ] = useActivities(refOpinion, searchParams.get("activitiesBy") || refDetail , currentUser );
     const [form] = Form.useForm();
     const activitiesEndRef = useRef(null);
 
@@ -34,10 +36,10 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
     const parentRefDetail = refDetail;
 
     // We have to use the "wright" refDetail, so that a user-post will be stored to wright detail
-    refDetail = FlowRouter.getQueryParam('activitiesBy') || refDetail;
+    refDetail = searchParams.get("activitiesBy") || refDetail;
     useEffect( () => {
         // check for hash in route
-        const hash = FlowRouter.current().context.hash;
+        const {hash} = useLocation();
         if (!hash)
             // scroll to end of list
             activitiesEndRef.current?.scrollIntoView(); //{ behavior: "smooth" })
@@ -54,7 +56,7 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
         return function cleanup(){
             clearInterval(timer);
         }
-    }, [activities/*, FlowRouter.getQueryParam('activitiesBy')*/]);
+    }, [activities]);
 
     useEffect(() => {
         if(!currentUser && canPostMessage) {
@@ -102,7 +104,7 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
             setWorking(true);
 
             setTimeout( _ => {
-                const activitiesBy = FlowRouter.getQueryParam('activitiesBy') || null;
+                const activitiesBy = searchParams.get("activitiesBy") || null;
 
                 Meteor.call('activities.postmessage', refOpinion, refDetail, parentRefDetail, activitiesBy, values.message, (err, res) => {
                     setWorking(false);
