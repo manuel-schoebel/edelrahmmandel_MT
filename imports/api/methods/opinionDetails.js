@@ -358,7 +358,7 @@ Meteor.methods({
         let rePositionSiblings = false;
         if (!detailData.position){
             // get max position +1 to insert the detail at the end
-            const lastDetailAtSameLevel = await OpinionDetails.findOne({
+            const lastDetailAtSameLevel = await OpinionDetails.findOneAsync({
                 refOpinion: detailData.refOpinion,
                 refParentDetail: detailData.refParentDetail,
                 finallyRemoved: false
@@ -399,7 +399,6 @@ Meteor.methods({
                 $inc: { position: 1 }
             }, { multi: true });
         }
-        console.debug('insertAsync')
         let newId = await OpinionDetails.insertAsync(detail);
         
         let activity = await injectUserData({ currentUser }, {
@@ -831,7 +830,7 @@ Meteor.methods({
      * @param {String} refDetail Specifies the Detail by Id
      * @param {Integer} newPosition New Position to place the Detail
      */
-    'opinionDetails.rePosition'(refDetail, newPosition){
+    async 'opinionDetails.rePosition'(refDetail, newPosition){
         this.unblock();
 
         check(refDetail, String);
@@ -841,15 +840,15 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
         
-        const old = OpinionDetails.findOne(refDetail);
+        const old = await OpinionDetails.findOneAsync(refDetail);
 
         if (!old) {
             throw new Meteor.Error('Der angegebene Baustein wurde nicht gefunden und kann somit nicht verschoben werden.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: old.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -867,7 +866,7 @@ Meteor.methods({
         const syncUpdateDetails = Meteor.wrapAsync(OpinionDetails.update, OpinionDetails);
 
         // Update the detail to it's new Position
-        syncUpdateDetails(refDetail, { $set:{ position: newPosition } });
+        await OpinionDetails.updateAsync(refDetail, { $set:{ position: newPosition } });
 
         // update all other details and increase their position
         // if oldPosition is greater than newPosition
@@ -881,22 +880,29 @@ Meteor.methods({
         }
 
         // get all Ids that were affected by the new position of the item above and should be repositioned too
-        const updatedIdsOnSameLevel = OpinionDetails.find(query, { fields: { _id: 1 }}).map( ({ _id }) => _id );
+        const updatedIdsOnSameLevel = await OpinionDetails.find(query, { fields: { _id: 1 }}).mapAsync( ({ _id }) => _id );
         // and then update them
-        syncUpdateDetails({_id: { $in: updatedIdsOnSameLevel }}, { $inc: { position: incValue } }, { multi: true });
+        await OpinionDetails.updateAsync({_id: { $in: updatedIdsOnSameLevel }}, { $inc: { position: incValue } }, { multi: true });
 
         //return;
 
         // update all Levels below recursiv
-        const updateChildren = (ref, newParentPosition) => {
-            OpinionDetails.find({
+        const updateChildren = async (ref, newParentPosition) => {
+            const details = await OpinionDetails.find({
                 refParentDetail: ref
-            }).forEach( ({ _id, position }) => {
-                syncUpdateDetails(_id, {
+            }).fetchAsync();
+            details.forEach( async ({_id, position}) => {
+                await OpinionDetails.updateAsync(_id, {
                     $set: { parentPosition: newParentPosition }
                 });
-                updateChildren(_id, newParentPosition + position + '.');
-            });
+                await updateChildren(_id, newParentPosition + position + '.');
+            })
+            // .forEach( ({ _id, position }) => {
+            //     syncUpdateDetails(_id, {
+            //         $set: { parentPosition: newParentPosition }
+            //     });
+            //     updateChildren(_id, newParentPosition + position + '.');
+            // });
         }
         
         // add refDetail to run all in one place
@@ -906,9 +912,9 @@ Meteor.methods({
             _id: { $in: updatedIdsOnSameLevel }
         }, {
             fields: { _id:1, position: 1}
-        }).forEach( ({ _id, position }) => {
+        }).forEach( async ({ _id, position }) => {
             // Update all children of the repositioned Item
-            updateChildren( _id, (old.parentPosition || '') + position + '.');
+            await updateChildren( _id, (old.parentPosition || '') + position + '.');
         });
     }
 });

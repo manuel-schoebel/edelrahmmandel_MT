@@ -12,6 +12,8 @@ export const Picture = ( { item, permissions, first, last } ) => {
     const { _id, depth, files, printTitle, text, deleted } = item;
     const deletedClass = deleted ? 'mbac-opinion-detail-deleted':'';
 
+    console.log('files', files)
+
     return (
         <Fragment>
             {/*<OpinionDetailAdder item={item} permissions={permissions} />*/}

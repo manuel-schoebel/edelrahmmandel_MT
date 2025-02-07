@@ -54,7 +54,6 @@ export const ModalFileUpload = ( { mode/*NEW||EDIT*/, refOpinion, refDetail }) =
 
             const upload = Images.insert({
                 file,
-                streams: 'dynamic',
                 chunkSize: 'dynamic',
                 meta: { refOpinion }
             }, false);
@@ -74,7 +73,9 @@ export const ModalFileUpload = ( { mode/*NEW||EDIT*/, refOpinion, refDetail }) =
                         title: fileObj.name,
                         printTitle: fileObj.name,
                         text: 'Bildtext',
-                        files: [fileObj]
+                        // _id is not yet available in fileObj but we need it
+                        // see: https://github.com/veliovgroup/Meteor-Files/issues/889
+                        files: [{...fileObj, _id: this.config.fileId}]
                     }
 
                     Meteor.call('opinionDetail.insert', data, (err, res) => {
