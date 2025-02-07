@@ -46,8 +46,8 @@ import { useAppState } from '../client/AppState';
 
 
 
-export const OpinionsDetailsForm = ({refDetail, currentUser}) => {
-    const { opinionId } = useParams();
+export const OpinionsDetailsForm = ({currentUser}) => {
+    const { opinionId, refDetail = null } = useParams();
     const { hasAdminRole , hasRoleOPINION_CONTROL } = useAccount();
     const [opinion, opinionIsLoading] = useOpinion(opinionId , hasRoleOPINION_CONTROL );
     const [detail, detailIsLoading] = useOpinionDetail(opinionId, refDetail);

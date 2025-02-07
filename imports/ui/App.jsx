@@ -101,7 +101,8 @@ export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) =
                 <Route index element={<Home />} />
                 <Route path="info" element={<InfoForm />} />
                 <Route path="opinions" element={<OpinionsForm currentUser={currentUser} />} />
-                <Route path="opinions/:opinionId" element={<OpinionsDetailsForm refDetail={null} currentUser={currentUser}/>} />
+                <Route path="opinions/:opinionId" element={<OpinionsDetailsForm currentUser={currentUser}/>} />
+                <Route path="opinions/:opinionId/:refDetail" element={<OpinionsDetailsForm currentUser={currentUser}/>} />
             </Route>
         </Routes>
     )
