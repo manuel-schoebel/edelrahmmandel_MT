@@ -45,7 +45,7 @@ const messageWithMentions = async ({currentUser, msg, refs}) => {
                     throw new Meteor.Error(err.message);
                 }
                 
-                UserActivities.insert(useractivity);
+                await UserActivities.insertAsync(useractivity);
             }
         });
     }
@@ -72,7 +72,7 @@ Meteor.methods({
         let currentUser = await Meteor.users.findOneAsync(this.userId);
         const opinionDetail = await OpinionDetails.findOneAsync(id);
 
-        const isShared = Opinions.findOne({
+        const isShared = await Opinions.findOneAsync({
             _id: opinionDetail.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -82,7 +82,7 @@ Meteor.methods({
         }
 
         // check if we need to push or pop the like
-        const doneBefore = await OpinionDetails.findOneAsync({            
+        const doneBefore = await OpinionDetails.findOneAsync({
             _id: id,
             [action + 's.userId']: this.userId
         });

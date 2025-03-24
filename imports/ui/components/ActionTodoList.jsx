@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import { Link } from 'react-router';
 import Table from 'antd/lib/table';
 import Tag from 'antd/lib/tag';
 
@@ -24,7 +25,7 @@ export const ActionTodoList = ({item, refOpinion, last, permissions}) => {
             title: 'Text',
             dataIndex: 'actionText',
             key: 'actionText',
-            render: (actionText, record) => <a href={`/opinions/${record.refOpinion}/${record._id}`}>{actionText}</a>,
+            render: (actionText, record) => <Link to={`/opinions/${record.refOpinion}/${record._id}`}>{actionText}</Link>,
         }
     ];
     

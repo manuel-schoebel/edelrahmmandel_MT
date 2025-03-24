@@ -13,14 +13,14 @@ import { UserActivities } from '../../imports/api/collections/userActivities';
 const SECRET_PASSWORD = 'jhd&%/f54ff!54hDRa6 H9La3"6*~';
 
 Meteor.methods({
-    'users.getExperts'(refOpinion, searchText){
+    async 'users.getExperts'(refOpinion, searchText){
         check(refOpinion, String);
         check(searchText, String);
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -35,9 +35,10 @@ Meteor.methods({
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten des Gutachtens. Sie können keinen Gutachter auswählen.');
         }
         
-        const opinionOwners = Opinions.findOne({
+        const opinions = await Opinions.findOneAsync({
             _id: refOpinion
-        }).sharedWith.filter( item => {
+        })
+        const opinionOwners = opinions.sharedWith.filter( item => {
             return item.role === 'OWNER';
         }).map( item => item.user.userId );
 
@@ -48,7 +49,7 @@ Meteor.methods({
             - Jeder Mitarbeiter von MEBEDO -> Rolle EMPLOYEE
             - Und ggf. der Admin -> Rolle ADMIN
         */
-        const users =  Meteor.users.find({
+        const users =  await Meteor.users.find({
             $and: [
                 { 'active': true },// nur aktive Benutzer
                 {'userData.roles': { $in: ['EMPLOYEE', 'ADMIN', 'OWNER'] }},
@@ -61,13 +62,15 @@ Meteor.methods({
                     ]
                 }
             ]
-        }, { fields: { 'userData.roles': 0 }, limit: 10 }).fetch().map( user => {
+        }, { fields: { 'userData.roles': 0 }, limit: 10 }).fetchAsync();
+        
+        const transformedUsers = users.map( user => {
             const { _id, username, userData } = user;
 
             return { userId: _id, username, ...userData};
         });
         
-        return users;
+        return transformedUsers;
     },
 
     /**
@@ -145,13 +148,12 @@ Meteor.methods({
      * @param {*} refOpinion 
      * @param {*} searchText 
      */
-    'users.getAll'(refOpinion, searchText){
+    async 'users.getAll'(refOpinion, searchText){
         check(refOpinion, String);
         check(searchText, String);
 
         const escapedText = escapeRegExp(searchText);
-
-        const users =  Meteor.users.find({
+        const users =  await Meteor.users.find({
             $and: [
                 { 'active': true },// nur aktive Benutzer
                 {
@@ -162,30 +164,33 @@ Meteor.methods({
                     ]
                 }
             ]
-        }, { fields: { 'userData.roles': 0 }, limit: 10 }).fetch().map( user => {
+        }, { fields: { 'userData.roles': 0 }, limit: 10 }).fetchAsync()
+        
+        const usersFound = users.map( user => {
             const { _id, username, userData } = user;
-
             return { userId: _id, username, ...userData};
         });
         
-        return users;
+        return usersFound;
     },
 
     /**
      * Returns alle Roles, that could be used by the current User
      * to assign to a new User
      */
-    'users.getInvitableRoles'() {
+    async 'users.getInvitableRoles'() {
         if (!this.userId) {
             throw new Meteor.Error('Sie sind nicht angemeldet.');
         }
 
         let inviteableRoles = {};
-        const currentUser = Meteor.users.findOne(this.userId);
+        const currentUser = await Meteor.users.findOneAsync(this.userId);
 
-        Roles.find({
+        const roles = await Roles.find({
             _id: { $in: currentUser.userData.roles }
-        }, { fields: { _id: 1, invitableRoles: 1 } }).fetch().map( role => {
+        }, { fields: { _id: 1, invitableRoles: 1 } }).fetchAsync()
+
+        roles.map( role => {
             role.invitableRoles.forEach( ir => {
                 inviteableRoles[ir.roleId] = ir.displayName
             })
@@ -243,7 +248,7 @@ Meteor.methods({
      * Return all Roles, that could be used by the current User
      * to assign as explicit role to a User
      */
-    'users.getExplicitInvitableRoles'(refOpinion) {
+    async 'users.getExplicitInvitableRoles'(refOpinion) {
         check(refOpinion, String);
 
         if (!this.userId) {
@@ -251,11 +256,11 @@ Meteor.methods({
         }
 
         let explicitInviteableRoles = {};
-        const currentUser = Meteor.users.findOne(this.userId);
+        const currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion is shared with the current user and check if
         // the user has an explicit role-assignement
-        const opinion = Opinions.findOne({
+        const opinion = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -275,9 +280,11 @@ Meteor.methods({
             userRoles = currentUser.userData.roles;
         }
         
-        Roles.find({
+        const roles = await Roles.find({
             _id: { $in:  userRoles }
-        }, { fields: { _id: 1, 'permissions.shareWithExplicitRoleInvitables': 1 } }).fetch().map( role => {
+        }, { fields: { _id: 1, 'permissions.shareWithExplicitRoleInvitables': 1 } }).fetchAsync()
+        
+        roles.map( role => {
             const roles = role.permissions.shareWithExplicitRoleInvitables;
         
             roles && roles.forEach( ir => {
@@ -295,7 +302,7 @@ Meteor.methods({
      * 
      * @param {Object} data Specifies the min Data for a new user
      */
-    'users.inviteUser'(refOpinion, data) {
+    async 'users.inviteUser'(refOpinion, data) {
         check(refOpinion, String);
         check(data, Object);
         check(data.email, String);
@@ -307,13 +314,13 @@ Meteor.methods({
             throw new Meteor.Error('Not Authorized.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // always save email in lower case
         data.email = data.email.toLowerCase();
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -330,19 +337,19 @@ Meteor.methods({
 
         const { email, firstName, lastName } = data;
 
-        const userId = Accounts.createUser({
+        const userId = await Accounts.createUserAsync({
             email,
             password: SECRET_PASSWORD
         });
 
-        Meteor.users.update(userId, {
+        await Meteor.users.updateAsync(userId, {
             $set: {
                 userData: data,
                 active: true// Benutzer aktivieren.
             }
         });
 
-        Opinions.update(refOpinion, {
+        await Opinions.updateAsync(refOpinion, {
             $push: { 
                 sharedWith: { 
                     user: { userId, firstName, lastName }
@@ -352,14 +359,14 @@ Meteor.methods({
 
         // post a new Aktivity to this opinion that a new user
         // has acces to this opinion
-        const activity = injectUserData({ currentUser }, {
+        const activity = await injectUserData({ currentUser }, {
             refOpinion,
             refDetail: null,
             type: 'SYSTEM-POST',
             message: `hat das Gutachten mit dem Benutzer <strong>${firstName + ' ' + lastName}</strong> geteilt.`
         }, { created: true });
         
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
 
         Accounts.sendVerificationEmail(userId, email);
     },
@@ -369,15 +376,15 @@ Meteor.methods({
      * 
      * @param {Object} data Specifies the min Data for a new user
      */
-    'users.shareWith'(refOpinion, data) {
+    async 'users.shareWith'(refOpinion, data) {
         if (!this.userId) {
             throw new Meteor.Error('Not Authorized.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -396,7 +403,7 @@ Meteor.methods({
         }
         const { userId, firstName, lastName } = data.user;
 
-        const alreadyShared = Opinions.findOne({
+        const alreadyShared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": userId
         });
@@ -404,7 +411,7 @@ Meteor.methods({
             throw new Meteor.Error('Das Gutachten wurde bereits mit dem ausgewählten Benutzer geteilt.');
         }
 
-        const opinion = Opinions.findOne(refOpinion);
+        const opinion = await Opinions.findOneAsync(refOpinion);
 
         let shW = { 
             user: { userId, firstName, lastName }
@@ -412,7 +419,7 @@ Meteor.methods({
         if (data.explicitRole) {
             shW.role = data.explicitRole;
         }
-        Opinions.update(refOpinion, {
+        await Opinions.updateAsync(refOpinion, {
             $push: { 
                 sharedWith: shW
             }
@@ -420,26 +427,25 @@ Meteor.methods({
 
         // post a new Aktivity to this opinion that a new user
         // has acces to this opinion
-        const activity = injectUserData({ currentUser }, {
+        const activity = await injectUserData({ currentUser }, {
             refOpinion,
             refDetail: null,
             type: 'SYSTEM-POST',
             message: `hat das Gutachten mit dem Benutzer <strong>${firstName + ' ' + lastName}</strong> geteilt.`
         }, { created: true });
         
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
 
+        const userActivity = await injectUserData({ currentUser }, {
+            refUser: userId,
+            type: 'SHAREDWITH',
+            refs: { refOpinion },
+            message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat ${opinion.isTemplate ? 'eine Gutachtenvorlage':'ein Gutachten'} mit Ihnen geteilt.`,
+            originalContent: `Gutachten / ${opinion.title} / ${opinion.opinionNo}`,
+            unread: true
+        }, { created: true });
 
-        UserActivities.insert(
-            injectUserData({ currentUser }, {
-                refUser: userId,
-                type: 'SHAREDWITH',
-                refs: { refOpinion },
-                message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat ${opinion.isTemplate ? 'eine Gutachtenvorlage':'ein Gutachten'} mit Ihnen geteilt.`,
-                originalContent: `Gutachten / ${opinion.title} / ${opinion.opinionNo}`,
-                unread: true
-            }, { created: true })
-        );
+        await UserActivities.insertAsync(userActivity);
     },
 
     /**
@@ -448,7 +454,7 @@ Meteor.methods({
      * @param {String} refOpinion Specifies the opinion
      * @param {String} userId Specifies the user
      */
-     'users.cancelShareWith'(refOpinion, userId) {
+     async 'users.cancelShareWith'(refOpinion, userId) {
         check(refOpinion, String);
         check(userId, String);
 
@@ -456,10 +462,10 @@ Meteor.methods({
             throw new Meteor.Error('Not Authorized.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -474,14 +480,14 @@ Meteor.methods({
             throw new Meteor.Error('Sie besitzen keine Berechtigung für das Löschen des Benutzers zu diesem Dokument.');
         }
         
-        const opinionUserToRemove = Opinions.findOne({
+        const opinionUserToRemove = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": userId
         });
         const shW = opinionUserToRemove.sharedWith.find(s => s.user.userId == userId);
         const { firstName, lastName} = shW.user;
 
-        Opinions.update(refOpinion, {
+        await Opinions.updateAsync(refOpinion, {
             $pull: { 
                 sharedWith: shW
             }
@@ -489,14 +495,14 @@ Meteor.methods({
 
         // post a new Aktivity to this opinion that a new user
         // has acces to this opinion
-        const activity = injectUserData({ currentUser }, {
+        const activity = await injectUserData({ currentUser }, {
             refOpinion,
             refDetail: null,
             type: 'SYSTEM-POST',
             message: `hat den Benutzer <strong>${firstName + ' ' + lastName}</strong> für dieses Dokument entfernt.`
         }, { created: true });
         
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
     },
 
     /**

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link as ReactRouterLink } from 'react-router';
 
 import Dropdown from 'antd/lib/dropdown';
 import Space from 'antd/lib/space';
@@ -26,7 +27,7 @@ export const UserMenu = ({ currentUser , hasAdminRole }) => {
     let items = [
         {
             key: "PROFILE",
-            label: (<a href="/profile">Mein Profil</a>)
+            label: (<ReactRouterLink to="/profile">Mein Profil</ReactRouterLink>)
         },
         {
             type: 'divider',

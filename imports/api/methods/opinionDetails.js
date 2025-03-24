@@ -163,16 +163,16 @@ Meteor.methods({
      * 
      * @param {String} id Id of the opinionDetail to be toggelt
      */
-     'opinionDetail.toggleSpellcheck'(id) {
+     async 'opinionDetail.toggleSpellcheck'(id) {
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const opinionDetail = OpinionDetails.findOne(id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const opinionDetail = await OpinionDetails.findOneAsync(id);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: opinionDetail.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -187,14 +187,14 @@ Meteor.methods({
             throw new Meteor.Error('Keine Berechtigung zum Korrekturlesen des Gutachtens. Somit kann die Rechtschreibprüfung nicht gesetzt werden.');
         }
 
-        OpinionDetails.update(id, {
+        await OpinionDetails.updateAsync(id, {
             $set:{ 
                 spellchecked: opinionDetail.spellchecked ? false:true,
             },
             $inc: { activitiesCount: 1 },
         });
 
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: opinionDetail.refOpinion,
             refDetail: id._str || id,
             type: 'SYSTEM-LOG',
@@ -208,7 +208,7 @@ Meteor.methods({
             }]
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
     },
     
     /**

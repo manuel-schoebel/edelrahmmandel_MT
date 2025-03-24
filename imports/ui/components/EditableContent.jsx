@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { FlowRouter } from 'meteor/kadira:flow-router';
+import { useSearchParams } from 'react-router';
 
 import React, { Fragment } from 'react';
 
@@ -177,7 +177,17 @@ const FloatingActions = ({mode, onSave, onCancel, onSocialClick, onCheckAnswer, 
     )
 }
 
-export class EditableContent extends React.Component {
+function withSearchParams(Component) {
+    return function WrapperComponent(props) {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    console.log("searchParams", searchParams.get('activitiesBy'), props)
+      
+      return <Component {...props} searchParams={searchParams} setSearchParams={setSearchParams} />;
+    };
+  }
+
+export class _EditableContent extends React.Component {
     constructor(props) {
         super(props);
 
@@ -193,7 +203,7 @@ export class EditableContent extends React.Component {
     }
 
     checkAndFocusContentByQueryString() {
-        const activitiesBy = FlowRouter.getQueryParam('activitiesBy');
+        const activitiesBy = this.props.searchParams.get('activitiesBy');
         const { refDetail } = this.props;
         const { mode } = this.state;
 
@@ -220,6 +230,7 @@ export class EditableContent extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         const { type, value } = this.props;
         const { mode } = this.state;
+        this.checkAndFocusContentByQueryString();
 
         if (mode == 'EDIT') {
             if (prevProps.value === value && !this.componentValueSetup) return;
@@ -242,9 +253,12 @@ export class EditableContent extends React.Component {
         if (newMode == 'SHOW') {
             setAppState({ selectedDetail: null });
 
-            //FlowRouter.withReplaceState(() => {
-                FlowRouter.setQueryParams({ activitiesBy: null });
-            //});
+            this.props.setSearchParams((prev) => {
+                console.log('setSearchParams')
+                prev.set("activitiesBy", null);
+                return prev;
+              });
+            // FlowRouter.setQueryParams({ activitiesBy: null });
         }
 
         this.setState({ mode: newMode });
@@ -463,9 +477,13 @@ export class EditableContent extends React.Component {
             newMode = elementType === "Pagebreak" ? 'FOCUSED' : (canEdit ? 'EDIT':'FOCUSED');
         }
 
-        //FlowRouter.withReplaceState(() => {
-            FlowRouter.setQueryParams({activitiesBy: refDetail});
-        //});
+        this.props.setSearchParams((prev) => {
+            console.log('setSearchParams')
+            prev.set("activitiesBy", refDetail);
+            return prev;
+          });
+          
+        // FlowRouter.setQueryParams({activitiesBy: refDetail});
 
         setAppState({
             selectedDetail: {
@@ -540,7 +558,7 @@ export class EditableContent extends React.Component {
 
     recreatePdfPreview() {
         if (getAppState('livePdfPreview')) {
-            const refOpinion = FlowRouter.getParam("id");
+            const refOpinion = this.props.searchParams.get('id');
 
             setAppState({previewUrlBusy:true})
             Meteor.call('opinion.createPDF', refOpinion, 'livepreview', (err, url) => {
@@ -555,6 +573,8 @@ export class EditableContent extends React.Component {
         const { item, type, value, refDetail, permissions, elementType } = this.props;
         const { mode } = this.state;
         const { canEdit, canDelete } = permissions;
+
+        console.log({refDetail, mode})
 
         const toggleMode = this.toggleMode.bind(this);
         const uploadImage = this.uploadImage.bind(this);
@@ -669,3 +689,6 @@ export class EditableContent extends React.Component {
         return <div>UNKNOWN type: {type}</div>;
     }
 }
+
+
+export const EditableContent = withSearchParams(_EditableContent);

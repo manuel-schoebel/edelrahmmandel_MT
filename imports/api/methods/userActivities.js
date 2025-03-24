@@ -16,7 +16,7 @@ Meteor.methods({
      * @param {String} refUserActivity ID of the userActivity
      * @param {Boolean} unread true or False value to set
      */
-    'userActivity.setUnread'(refUserActivity, unread) {
+    async 'userActivity.setUnread'(refUserActivity, unread) {
         refUserActivity = (refUserActivity && refUserActivity._str) || refUserActivity;
 
         check(refUserActivity, String);
@@ -28,7 +28,7 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
         
-        const userActivity = UserActivities.findOne(refUserActivity);
+        const userActivity = await UserActivities.findOneAsync(refUserActivity);
         if (!userActivity) {
             throw new Meteor.Error('Die angegeben User-Aktivität konnte nicht gefunden werden.');
         }
@@ -36,7 +36,7 @@ Meteor.methods({
             throw new Meteor.Error('Sie sind nicht berechtigt die angegeben User-Aktivität zu verändern.');
         }
 
-        UserActivities.update({_id: refUserActivity}, {
+        await UserActivities.updateAsync({_id: refUserActivity}, {
             $set: { unread }
         });
     },

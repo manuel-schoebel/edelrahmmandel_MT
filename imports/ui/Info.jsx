@@ -1,4 +1,5 @@
 import React, { Fragment } from 'react';
+import { Link } from 'react-router';
 
 import PageHeader from 'antd/lib/page-header';
 import Breadcrumb from 'antd/lib/breadcrumb';
@@ -43,10 +44,10 @@ export class InfoForm extends React.Component {
                         <div>
                             <Breadcrumb>
                                 <Breadcrumb.Item>
-                                    <a href="/">Start</a>
+                                    <Link to="/">Start</Link>
                                 </Breadcrumb.Item>
                                 <Breadcrumb.Item>
-                                    <a href="">Info</a>
+                                    <Link to="">Info</Link>
                                 </Breadcrumb.Item>
                             </Breadcrumb>
 

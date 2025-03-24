@@ -1,10 +1,14 @@
 import React, { useEffect } from 'react';
 
 import Spin from 'antd/lib/spin';
-import { Routes, Route } from "react-router";
+import { Routes, Route, Outlet } from "react-router";
 
-import { LoginForm } from '/imports/ui/LoginForm';
-import { SiteLayout } from '/imports/ui/SiteLayout';
+import { LoginForm } from './LoginForm';
+import { SiteLayout } from './SiteLayout';
+import { VerifyEMail } from './components/VerifyEMail';
+import { UserProfileForm } from './components/user-profile-form';
+import { UsersAdminForm } from './UsersAdminForm';
+import { ForgotPassword } from './ForgotPassword';
 import { useAccount, useRoles } from '../client/trackers';
 import { useAppState } from '../client/AppState';
 import { Home } from './Home';
@@ -12,6 +16,21 @@ import { InfoForm } from './Info';
 import { OpinionsForm } from './OpinionsForm';
 import { OpinionsDetailsForm } from './OpinionsDetailsForm';
 
+// ProtectedRoute Component
+const ProtectedRoute = ({ children }) => {
+    const { isLoggedIn, accountsReady } = useAccount();
+
+    if (!accountsReady) {
+        return <Spin size="large" />; // Or a more specific loading indicator
+    }
+
+    if (!isLoggedIn) {
+        // Redirect to the login page and save the current location
+        return <LoginForm />
+    }
+
+    return <Outlet />; // Render children if authenticated
+};
 
 export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) => {
     const { currentUser, isLoggedIn, accountsReady, hasAdminRole } = useAccount();
@@ -73,13 +92,13 @@ export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) =
         }
     }, [appIsBusy]);
 
-    if (!accountsReady || isLoadingRoles) {
-        return <Spin size="large" />
-    }
+    // if (!accountsReady || isLoadingRoles) {
+    //     return <Spin size="large" />
+    // }
 
-    if (!isLoggedIn) {
-        return <LoginForm />
-    }
+    // if (!isLoggedIn) {
+    //     return <LoginForm />
+    // }
 
     /*const avoidUserActionWhenBusy = e => {
         console.log('scroll');
@@ -88,21 +107,26 @@ export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) =
             e.stopPropagation();
         }
     }*/
-
-
+    console.log("RENDER")
     return (
         <Routes>
-            <Route element={<SiteLayout activeMenuKey={activeMenuKey}
-                refOpinion={refOpinion}
-                refDetail={refDetail}
-                currentUser={currentUser}
-                hasAdminRole={hasAdminRole}
-            />}>
-                <Route index element={<Home />} />
-                <Route path="info" element={<InfoForm />} />
-                <Route path="opinions" element={<OpinionsForm currentUser={currentUser} />} />
-                <Route path="opinions/:opinionId" element={<OpinionsDetailsForm currentUser={currentUser}/>} />
-                <Route path="opinions/:opinionId/:refDetail" element={<OpinionsDetailsForm currentUser={currentUser}/>} />
+            <Route path="verify-email/:token" element={<VerifyEMail />} />
+            <Route path="forgotpassword" element={<ForgotPassword />} />
+            <Route element={<ProtectedRoute />}>
+                <Route element={<SiteLayout activeMenuKey={activeMenuKey}
+                    refOpinion={refOpinion}
+                    refDetail={refDetail}
+                    currentUser={currentUser}
+                    hasAdminRole={hasAdminRole}
+                />}>
+                    <Route index element={<Home />} />
+                    <Route path="usersAdmin" element={<UsersAdminForm currentUser={currentUser} />} />
+                    <Route path="info" element={<InfoForm currentUser={currentUser} />} />
+                    <Route path="profile" element={<UserProfileForm currentUser={currentUser} />} />
+                    <Route path="opinions" element={<OpinionsForm currentUser={currentUser} />} />
+                    <Route path="opinions/:opinionId" element={<OpinionsDetailsForm currentUser={currentUser}/>} />
+                    <Route path="opinions/:opinionId/:refDetail" element={<OpinionsDetailsForm currentUser={currentUser}/>} />
+                </Route>
             </Route>
         </Routes>
     )

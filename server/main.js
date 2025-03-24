@@ -13,7 +13,7 @@ import './datamigration';
 import { Accounts } from 'meteor/accounts-base'
 import { UserActivities } from '../imports/api/collections/userActivities';
 
-Accounts.validateLoginAttempt( loginData => {
+Accounts.validateLoginAttempt( async loginData => {
     const { allowed, methodName } = loginData;
     if (methodName == 'verifyEmail' || methodName == 'resetPassword') {
         return allowed;
@@ -30,7 +30,7 @@ Accounts.validateLoginAttempt( loginData => {
         if (user.username && !user.email && allowed) {
             return true;
         }
-        const verifiedUser = Meteor.users.findOne({
+        const verifiedUser = await Meteor.users.findOneAsync({
             'emails.address': user.email,
             'emails.verified': true
         });
@@ -57,13 +57,13 @@ Accounts.validateLoginAttempt( loginData => {
 
 const sendUnreadMessages = async () => {
     // lesen aller Useractivities, die noch nicht gelesen wurden und noch nicht per E-Mail versandt sind */
-    const messages = await UserActivities.findOneAsync({
+    const messages = await UserActivities.find({
         unread: true,
         $or: [
             { mailsent: { $exists: false } },
             { mailsent: false }
         ]
-    });
+    }).fetchAsync();
 
     if (messages) {
         messages.map( async (msg) => {

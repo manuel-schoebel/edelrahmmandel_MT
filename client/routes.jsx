@@ -93,16 +93,16 @@ function preventRouteChange (targetContext) {
   }]);
 
 
-FlowRouter.route('/verify-email/:token', {
-    name: 'verifyMail',
-    action({ token }) {
-        mount(App, {
-            content: VerifyEMail,
-            token,
-            authenticatedRoute: false
-        });
-    },
-});
+// FlowRouter.route('/verify-email/:token', {
+//     name: 'verifyMail',
+//     action({ token }) {
+//         mount(App, {
+//             content: VerifyEMail,
+//             token,
+//             authenticatedRoute: false
+//         });
+//     },
+// });
 
 FlowRouter.route('/reset-password/:token', {
     name: 'resetPassword',

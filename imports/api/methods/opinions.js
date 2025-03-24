@@ -32,7 +32,7 @@ Meteor.methods({
         // check if the user wants to create a new Template or a "normal" opinion
         // therefor we have to check different permissions
         const permissionName = data.isTemplate ? 'opinion.manageTemplate' : 'opinion.create';
-        if (!await hasPermission({ currentUser }, permissionName)) {
+        if (!hasPermission({ currentUser }, permissionName)) {
             const errorMessage = data.isTemplate 
                 ? 'Keine Berechtigung zum Erstellen einer Gutachten-Vorlage'
                 : 'Keine Berechtigung zum Erstellen eines neuen Gutachten.';
@@ -124,7 +124,7 @@ Meteor.methods({
      * @param {String} refOpinion ID of the opinion to be updated
      * @param {Object} data Properties/values to be updated
      */
-    'opinion.update'(refOpinion, data) {
+    async 'opinion.update'(refOpinion, data) {
         check(refOpinion, String);
         check(data, Object);
 
@@ -132,10 +132,10 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -150,7 +150,7 @@ Meteor.methods({
             throw new Meteor.Error('Keine Berechtigung zum Aktualisieren des angegebenen Gutachtens.');
         }
         
-        Opinions.update(refOpinion, {
+        await Opinions.updateAsync(refOpinion, {
             $set: data
         });
     },
@@ -163,7 +163,7 @@ Meteor.methods({
      * @param {String} refOpinion Specifies the ID of the Opinion
      * @param {String} searchText (Optional) Text to search for a specific user
      */
-    'opinion.getSharedWith'(refOpinion, searchText) {
+    async 'opinion.getSharedWith'(refOpinion, searchText) {
         check(refOpinion, String);
         if (searchText) check(searchText, String);
 
@@ -171,10 +171,10 @@ Meteor.methods({
             throw new Meteor.Error('Not authorized.');
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -205,17 +205,17 @@ Meteor.methods({
      * @param {String} refOpinion Specifies the Opinion by ID
      * @param {Object} data Object with name and value of the new Variable
      */
-    'opinion.addVariable'(refOpinion, data) {
+    async 'opinion.addVariable'(refOpinion, data) {
         check(refOpinion, String);
         check(data, Object);
         check(data.name, String);
         check(data.value, String);
         check(data.copyValue, Boolean);
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -234,13 +234,13 @@ Meteor.methods({
 
         try {
             if (!shared.userVariables) {
-                Opinions.update(refOpinion, {
+                await Opinions.updateAsync(refOpinion, {
                     $set: {
                         userVariables: [data]
                     }
                 });
             } else {
-                Opinions.update(refOpinion, {
+                await Opinions.updateAsync(refOpinion, {
                     $push: {
                         userVariables: data
                     }
@@ -253,7 +253,7 @@ Meteor.methods({
                 oldValue: null,
                 newValue: data
             }];
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: refOpinion,
                 type: 'SYSTEM-LOG',
                 action: 'INSERT',
@@ -261,7 +261,7 @@ Meteor.methods({
                 changes
             }, { created: true });
 
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
         } catch (err) {
             throw new Meteor.Error(err.message);
         }
@@ -276,7 +276,7 @@ Meteor.methods({
      * @param {String} refOpinion Reference to the Opinion the participant belongs to
      * @param {Object} variable Data of the variable to update including the id
      */
-    'opinion.updateVariable'(refOpinion, variable) {
+    async 'opinion.updateVariable'(refOpinion, variable) {
         check(refOpinion, String);
         check(variable, Object);
         check(variable._id, String);
@@ -291,10 +291,10 @@ Meteor.methods({
             copyValue: variable.copyValue
         }
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -312,7 +312,7 @@ Meteor.methods({
         const oldVariable = shared.userVariables.find( v => v._id == newVariable._id );
 
         try {
-            Opinions.update({
+            await Opinions.updateAsync({
                 _id: refOpinion, 
                 'userVariables._id': newVariable._id
             },{
@@ -327,7 +327,7 @@ Meteor.methods({
                 oldValue: oldVariable,
                 newValue: newVariable
             }];
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: refOpinion,
                 type: 'SYSTEM-LOG',
                 action: 'UPDATE',
@@ -335,7 +335,7 @@ Meteor.methods({
                 changes
             }, { created: true });
     
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
         } catch (err) {
             throw new Meteor.Error(err.message);
         } 
@@ -347,14 +347,14 @@ Meteor.methods({
      * @param {String} refOpinion Reference to the Opinion the participant belongs to
      * @param {Object} participant Data of the participant to remove including the id of the participant
      */
-    'opinion.removeVariable'(refOpinion, variable) {
+    async 'opinion.removeVariable'(refOpinion, variable) {
         check(refOpinion, String);
         check(variable && variable._id, String);
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -370,7 +370,7 @@ Meteor.methods({
         }
 
         try {
-            Opinions.update({
+            await Opinions.updateAsync({
                 _id: refOpinion
             },{
                 $pull: {
@@ -384,7 +384,7 @@ Meteor.methods({
                 oldValue: variable,
                 newValue: null
             }];
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: refOpinion,
                 type: 'SYSTEM-LOG',
                 action: 'REMOVE',
@@ -392,7 +392,7 @@ Meteor.methods({
                 changes
             }, { created: true });
     
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
         } catch (err) {
             throw new Meteor.Error(err.message);
         }
@@ -404,14 +404,14 @@ Meteor.methods({
      * @param {String} refOpinion Reference to the Opinion the new participant belongs to
      * @param {Object} participant Data of the participant to creat/add
      */
-    'opinion.addParticipant'(refOpinion, participant) {
+    async 'opinion.addParticipant'(refOpinion, participant) {
         check(refOpinion, String);
         check(participant, Object);
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -431,7 +431,7 @@ Meteor.methods({
         try {
             ParticipantSchema.validate(participant);
 
-            Opinions.update(refOpinion, {
+            await Opinions.updateAsync(refOpinion, {
                 $push: {
                     participants: participant
                 }
@@ -444,7 +444,7 @@ Meteor.methods({
                 oldValue: null,
                 newValue: participant
             }];
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: refOpinion,
                 type: 'SYSTEM-LOG',
                 action: 'INSERT',
@@ -452,7 +452,7 @@ Meteor.methods({
                 changes
             }, { created: true });
     
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
 
             return changes;
         } catch (err) {
@@ -466,14 +466,14 @@ Meteor.methods({
      * @param {String} refOpinion Reference to the Opinion the participant belongs to
      * @param {Object} participant Data of the participant to update including the id of the participant
      */
-    'opinion.updateParticipant'(refOpinion, participant) {
+    async 'opinion.updateParticipant'(refOpinion, participant) {
         check(refOpinion, String);
         check(participant, Object);
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -493,7 +493,7 @@ Meteor.methods({
         try {
             ParticipantSchema.validate(participant);
 
-            Opinions.update({
+            await Opinions.updateAsync({
                 _id: refOpinion, 
                 'participants.id': participant.id
             },{
@@ -509,7 +509,7 @@ Meteor.methods({
                 oldValue: oldParticipant,
                 newValue: participant
             }];
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: refOpinion,
                 type: 'SYSTEM-LOG',
                 action: 'UPDATE',
@@ -517,7 +517,7 @@ Meteor.methods({
                 changes
             }, { created: true });
     
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
 
             return changes;
         } catch (err) {
@@ -531,14 +531,14 @@ Meteor.methods({
      * @param {String} refOpinion Reference to the Opinion the participant belongs to
      * @param {Object} participant Data of the participant to remove including the id of the participant
      */
-    'opinion.removeParticipant'(refOpinion, participant) {
+    async 'opinion.removeParticipant'(refOpinion, participant) {
         check(refOpinion, String);
         check(participant && participant.id, String);
 
-        let currentUser = Meteor.users.findOne(this.userId);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -554,7 +554,7 @@ Meteor.methods({
         }
 
         try {
-            Opinions.update({
+            await Opinions.updateAsync({
                 _id: refOpinion
             },{
                 $pull: {
@@ -569,7 +569,7 @@ Meteor.methods({
                 oldValue: participant,
                 newValue: null
             }];
-            let activity = injectUserData({ currentUser }, {
+            let activity = await injectUserData({ currentUser }, {
                 refOpinion: refOpinion,
                 type: 'SYSTEM-LOG',
                 action: 'REMOVE',
@@ -577,7 +577,7 @@ Meteor.methods({
                 changes
             }, { created: true });
     
-            Activities.insert(activity);
+            await Activities.insertAsync(activity);
 
             return changes;
         } catch (err) {

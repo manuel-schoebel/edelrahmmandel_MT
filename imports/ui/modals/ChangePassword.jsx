@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from 'react';
+import { Link } from 'react-router';
 import { Accounts } from 'meteor/accounts-base';
 
 import Modal from 'antd/lib/modal';
@@ -44,7 +45,7 @@ export const ModalChangePassword = ( { currentUser } ) => {
 
     return (
         <Fragment>
-            <a href="#" onClick={showDialog}><UnlockOutlined /> Passwort ändern</a>
+            <Link to="#" onClick={showDialog}><UnlockOutlined /> Passwort ändern</Link>
 
             { !showModal ? null :
                 <ModalBackground>

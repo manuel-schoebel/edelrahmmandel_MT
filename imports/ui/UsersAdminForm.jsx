@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import PageHeader from 'antd/lib/page-header';
 import Breadcrumb from 'antd/lib/breadcrumb';
 import Space from 'antd/lib/space';
@@ -29,10 +30,10 @@ export const UsersAdminForm = ({currentUser}) => {
                     <div>
                         <Breadcrumb>
                             <Breadcrumb.Item>
-                                <a href="/">Start</a>
+                                <Link to="/">Start</Link>
                             </Breadcrumb.Item>
                             <Breadcrumb.Item>
-                                <a href="">Benutzer (Admin)</a>
+                                <Link to="">Benutzer (Admin)</Link>
                             </Breadcrumb.Item>
                         </Breadcrumb>
 

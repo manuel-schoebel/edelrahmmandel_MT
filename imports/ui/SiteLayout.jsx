@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router';
+import { Outlet, Link as ReactRouterLink } from 'react-router';
 
 import { ListActivities } from './ListActivities';
 
@@ -110,9 +110,9 @@ export const SiteLayout = props => {
                     left: 0,
                   }}
             >
-                <a href="/"><div className="mbac-logo" >
+                <ReactRouterLink to="/"><div className="mbac-logo" >
                     <img className="large" src="/MEBEDO_LOGO_PRINT_RGB-300x88.jpg" />
-                </div></a>
+                </div></ReactRouterLink>
 
                 <Menu
                     items={items}

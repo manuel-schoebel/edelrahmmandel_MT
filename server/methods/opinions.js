@@ -353,7 +353,7 @@ Meteor.methods({
         3. meta.archive auf true setzen.
         */
         // Aktuellen Dateipfad auslesen.
-        let opinionPdf = OpinionPdfs.findOne({ _id: PDFId , 'meta.refOpinion': refOpinion });
+        let opinionPdf = await OpinionPdfs.findOneAsync({ _id: PDFId , 'meta.refOpinion': refOpinion });
         const src = opinionPdf.versions.original.path;
         // Archivpfad.
         //const archivePath = 'C:/Users/marc.tomaschoff/meteor/DATA/PDF/_Archiv';
@@ -365,11 +365,12 @@ Meteor.methods({
         //console.log( dest )
         
         // 1. Datei auf Speicher/FS verschieben
-        fs_extra.move( src , dest )
-        .then(() => {
+        try {
+            await fs_extra.move( src , dest );
+            
             console.log( 'file move successfull!' );
             // Pfade in Collection anpassen und meta.archive auf true setzen.
-            OpinionPdfs.update({ _id: PDFId , 'meta.refOpinion': refOpinion }, {
+            await OpinionPdfs.updateAsync({ _id: PDFId , 'meta.refOpinion': refOpinion }, {
                 $set: {
                     'meta.archive': true,
                     'path': dest,
@@ -379,18 +380,17 @@ Meteor.methods({
             });            
 
             // post a new activity to this opinion
-            const activity = injectUserData({ currentUser }, {
+            const activity = await injectUserData({ currentUser }, {
                 refOpinion,
                 refDetail: null,
                 type: 'SYSTEM-POST',
                 message: `hat das PDF mit ID <strong>${PDFId}</strong> archiviert.`
             }, { created: true });
             
-            Activities.insertAsync(activity);
-        })
-        .catch( err => {
-            console.error( err )
-        })
+            await Activities.insertAsync(activity);
+        } catch(error) {
+            console.error(error)
+        }
     },
 
     /**
@@ -519,7 +519,7 @@ Meteor.methods({
         3. meta.archive auf false setzen.
         */
         // Aktuellen Dateipfad im Archiv auslesen.
-        let opinionPdf = OpinionPdfs.findOne({ _id: PDFId , 'meta.refOpinion': refOpinion });
+        let opinionPdf = await OpinionPdfs.findOneAsync({ _id: PDFId , 'meta.refOpinion': refOpinion });
         const src = opinionPdf.versions.original.path;
         // Zielpfad.
         //const dest = `${opinionPdf._storagePath}/${opinionPdf._id}.pdf`;
@@ -530,11 +530,11 @@ Meteor.methods({
         //console.log( dest )
 
         // 1. Datei auf Speicher/FS verschieben
-        fs_extra.move( src , dest )
-        .then(() => {
+        try{
+            await fs_extra.move( src , dest )
             console.log( 'file move successfull!' );
             // Pfade in Collection anpassen und meta.archive auf false setzen.
-            OpinionPdfs.update({ _id: PDFId , 'meta.refOpinion': refOpinion }, {
+            await OpinionPdfs.updateAsync({ _id: PDFId , 'meta.refOpinion': refOpinion }, {
                 $set: {
                     'meta.archive': false,
                     'path': dest,
@@ -544,18 +544,17 @@ Meteor.methods({
             });
 
             // post a new activity to this opinion
-            const activity = injectUserData({ currentUser }, {
+            const activity = await injectUserData({ currentUser }, {
                 refOpinion,
                 refDetail: null,
                 type: 'SYSTEM-POST',
                 message: `hat das PDF mit ID <strong>${PDFId}</strong> aus dem Archiv zurückgenommen.`
             }, { created: true });
             
-            Activities.insertAsync(activity);
-        })
-        .catch( err => {
+            await Activities.insertAsync(activity);
+        } catch(err) {
             console.error( err )
-        })
+        }
     },
 
     /**
@@ -644,7 +643,7 @@ Meteor.methods({
             throw new Meteor.Error('Sie besitzen keine Berechtigung für das Löschen von PDFs.');
         }
 
-        OpinionPdfs.remove({_id: PDFId}, (error) => {
+        await OpinionPdfs.removeAsync({_id: PDFId}, (error) => {
             if (error) {
               console.error(`File wasn't removed, error:  ${error.reason}`);
             } else {
@@ -653,7 +652,7 @@ Meteor.methods({
         });
 
         // post a new activity to this opinion
-        const activity = injectUserData({ currentUser }, {
+        const activity = await injectUserData({ currentUser }, {
             refOpinion,
             refDetail: null,
             type: 'SYSTEM-POST',

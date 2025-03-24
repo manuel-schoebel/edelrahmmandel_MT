@@ -1,5 +1,6 @@
 import { Meteor } from 'meteor/meteor';
 import React from 'react';
+import { Link } from 'react-router';
 import Form from 'antd/lib/form';
 import Input from 'antd/lib/input';
 import Button from 'antd/lib/button';
@@ -92,7 +93,7 @@ export const LoginForm = () => {
                       Anmelden
                   </Button>
 
-                  <a href="/forgotpassword">Passwort vergessen</a>
+                  <Link to="/forgotpassword">Passwort vergessen</Link>
               </Space>
               
           </Form.Item>

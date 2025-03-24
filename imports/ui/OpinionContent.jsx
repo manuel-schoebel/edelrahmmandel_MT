@@ -46,6 +46,7 @@ import moment from 'moment';
 import { useAppState } from '../client/AppState';
 
 import { pdfjs, Document, Page } from 'react-pdf';
+import { Link, useSearchParams } from 'react-router';
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -54,6 +55,7 @@ const { TabPane } = Tabs;
 
 export const OpinionSpellcheckList = ({refOpinion, currentUser, canEdit=false, canDelete=false, children, onTabPaneChanged}) => {
     const [opinionDetailsSpellcheck, spellcheckLoading] = useOpinionDetailsSpellcheck(refOpinion)
+    const [searchParams, setSearchParams] = useSearchParams();
 
     return (
         <Table
@@ -71,13 +73,23 @@ export const OpinionSpellcheckList = ({refOpinion, currentUser, canEdit=false, c
                     key: 'pos',
                     render: (text, item) => {
                         if (item.refParentDetail === null)
-                            return <div style={{width:50}} ><a href={`/opinions/${refOpinion}?activitiesBy=${item._id}`}>
-                                {'' + (item.printParentPosition || '') + item.printPosition}
-                            </a></div>
+                            return <div style={{width:50}} >
+                                <a onClick={() => {
+                                    setSearchParams((prev) => {
+                                        prev.set('activitiesBy', item._id);
+                                        return prev;
+                                    })
+                                    onTabPaneChanged('DOCUMENT')
+                                }}>
+                                    {'' + (item.printParentPosition || '') + item.printPosition}
+                                </a>
+                            </div>
 
-                        return <div style={{width:50}} ><a href={`/opinions/${refOpinion}/${item.refParentDetail}?activitiesBy=${item._id}`}>
-                            {'' + (item.printParentPosition || '') + item.printPosition}
-                        </a></div>
+                        return <div style={{width:50}} >
+                            <Link reloadDocument to={{pathname: `/opinions/${refOpinion}/${item.refParentDetail}`, search: `?activitiesBy=${item._id}`}}>
+                                {'' + (item.printParentPosition || '') + item.printPosition}
+                            </Link>
+                        </div>
                     }
                 }, {
                     title: 'Text',
@@ -107,7 +119,7 @@ export const OpinionSpellcheckList = ({refOpinion, currentUser, canEdit=false, c
     )
 }
 
-export const OpinionContent = ({refOpinion, currentUser, canEdit=false, canDelete=false, canCancelShareWith=false, canShareWithExplicitRole=false, children, onTabPaneChanged}) => {
+export const OpinionContent = ({activeTabPane, refOpinion, currentUser, canEdit=false, canDelete=false, canCancelShareWith=false, canShareWithExplicitRole=false, children, onTabPaneChanged}) => {
     const [ opinion, isLoading ] = useOpinion(refOpinion);
     const [ pdfs, isPdfLoading ] = useOpinionPdfs(refOpinion);
     const [ pdfs_archive, isPdfLoading_archive ] = useOpinionPdfs( refOpinion , true );
@@ -395,11 +407,11 @@ export const OpinionContent = ({refOpinion, currentUser, canEdit=false, canDelet
                                 title: 'Titel',
                                 dataIndex: 'title',
                                 key: 'title',
-                                render: (text, item) => <a href={item.link} target="_blank">
+                                render: (text, item) => <Link to={item.link} target="_blank">
                                     <Tooltip title="PDF öffnen">
                                         <Space><FilePdfOutlined /><span>Gutachtliche Stellungnahme</span></Space>
                                     </Tooltip>
-                                </a>
+                                </Link>
                             }, {
                                 title: 'Erstellt am',
                                 dataIndex: 'meta.createdAt',
@@ -558,7 +570,7 @@ export const OpinionContent = ({refOpinion, currentUser, canEdit=false, canDelet
             label: (<span><FileDoneOutlined />Spellcheck</span>),
             disabled: disableTabPanes,
             children: (
-                <OpinionSpellcheckList refOpinion={refOpinion} currentUser={currentUser} />
+                <OpinionSpellcheckList onTabPaneChanged={onTabPaneChanged} refOpinion={refOpinion} currentUser={currentUser} />
             )
         },
         {
@@ -613,6 +625,6 @@ export const OpinionContent = ({refOpinion, currentUser, canEdit=false, canDelet
     ];
 
     return (
-        <Tabs items={items} onChange={onTabPaneChanged} size="large" tabPosition={window.innerWidth > 800 ? 'left':'top'} />
+        <Tabs activeKey={activeTabPane} items={items} onChange={onTabPaneChanged} size="large" tabPosition={window.innerWidth > 800 ? 'left':'top'} />
     )
 }

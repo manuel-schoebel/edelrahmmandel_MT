@@ -14,7 +14,7 @@ import notification from 'antd/lib/notification';
 import UserOutlined from '@ant-design/icons/UserOutlined';
 import LockOutlined from '@ant-design/icons/LockOutlined';
 
-import { FlowRouter } from 'meteor/kadira:flow-router';
+import { useNavigate, useParams } from 'react-router';
 
 
 const layout = {
@@ -33,8 +33,10 @@ const tailLayout = {
     },
 };
 
-export const VerifyEMail = ({ token }) => {
+export const VerifyEMail = () => {
+    const { token } = useParams();
     const [ verifing, setVerifing ] = useState(false);
+    const navigate = useNavigate();
 
     const setPassword = data => {
         const {newPassword, repeatPassword} = data;
@@ -81,7 +83,7 @@ export const VerifyEMail = ({ token }) => {
                     });
                     
                     setTimeout(() => {
-                        FlowRouter.go('/opinions');
+                        navigate('/opinions');
                     }, 2000);
                 });
             });

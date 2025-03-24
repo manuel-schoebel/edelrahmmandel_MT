@@ -1,4 +1,5 @@
 import React, { Fragment, useState } from 'react';
+import { Link } from 'react-router';
 
 import PageHeader from 'antd/lib/page-header';
 import Breadcrumb from 'antd/lib/breadcrumb';
@@ -128,10 +129,10 @@ export class UserProfileForm extends React.Component {
                     <div>
                         <Breadcrumb>
                             <Breadcrumb.Item>
-                                <a href="/">Start</a>
+                                <Link to="/">Start</Link>
                             </Breadcrumb.Item>
                             <Breadcrumb.Item>
-                                <a href="/profile">Mein Profil</a>
+                                <Link to="/profile">Mein Profil</Link>
                             </Breadcrumb.Item>
                         </Breadcrumb>
                         <PageHeader

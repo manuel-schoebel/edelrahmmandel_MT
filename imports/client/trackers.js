@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { useTracker, useSubscribe } from 'meteor/react-meteor-data';
 
@@ -491,43 +491,84 @@ export const useOpinionActionList = refOpinion => useTracker( () => {
  * 
  * @param {String} refOpinion   id of the Opinion
  */
-export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker(() => {
-    const noDataAvailable = [ [] /*opinionPdfs*/ , true /*loading*/];
 
-    if (!Meteor.user()) {
-        return noDataAvailable;
-    }
-    const handler = Meteor.subscribe('opinion-pdfs', refOpinion);
-
-    if (!handler.ready()) { 
-        return noDataAvailable;
-    }
-
-    let data;
+export const useOpinionPdfs = (refOpinion, archive = false) => {
+    const [opinionPdfs, setOpinionPdfs] = useState([])
+    const [opinionPdfsWithLink, setOpinionPdfsWithLink] = useState([])
+    const isLoading = useSubscribe('opinion-pdfs', refOpinion);
+  
+    let query = {
+        $and: [
+            { "meta.refOpinion": refOpinion } , 
+            { $or:[
+                { "meta.archive": null },
+                { "meta.archive": false }
+            ]}
+        ]
+    };
 
     if(archive) {
-        data = OpinionPdfs.find({ "meta.refOpinion": refOpinion , "meta.archive": true }, { sort: { 'meta.createdAt': -1 }})
-    } else {
-        data = OpinionPdfs.find({
-            $and:[
-                { "meta.refOpinion": refOpinion } , 
-                { $or:[
-                    { "meta.archive": null },
-                    { "meta.archive": false }
-                ]}]},
-                { sort: { 'meta.createdAt': -1 }});
+        query = { "meta.refOpinion": refOpinion , "meta.archive": true };
     }
 
-    return [
-        data.cursor.map( async file => {
-            const pdfs = await OpinionPdfs.findOneAsync({_id: file._id});
+    const data = useTracker(() => OpinionPdfs.find(query, { sort: { 'meta.createdAt': -1 }}).fetchAsync(), [refOpinion])
+
+    useEffect(() => {
+        data.then( opinionPdfs => {
+            setOpinionPdfs(opinionPdfs)
+        })
+    }, [data])
+
+    useEffect(() => {
+        Promise.all(opinionPdfs.map( async file => {
+            const pdfs = await OpinionPdfs.findOneAsync({ _id: file._id });
             let link = pdfs && pdfs.link();
-            file.link = link;
-            return file;
-        }), 
-        false
-    ];
-}, [refOpinion]);
+            return {...file, link}
+        })).then( withLink => {
+            setOpinionPdfsWithLink(withLink)
+        })
+    }, [opinionPdfs])
+    
+    return [opinionPdfsWithLink, isLoading()];
+}
+
+// export const useOpinionPdfs = ( refOpinion , archive = false ) => useTracker(() => {
+//     const noDataAvailable = [ [] /*opinionPdfs*/ , true /*loading*/];
+
+//     if (!Meteor.user()) {
+//         return noDataAvailable;
+//     }
+//     const handler = Meteor.subscribe('opinion-pdfs', refOpinion);
+
+//     if (!handler.ready()) { 
+//         return noDataAvailable;
+//     }
+
+//     let data;
+
+//     if(archive) {
+//         data = OpinionPdfs.find({ "meta.refOpinion": refOpinion , "meta.archive": true }, { sort: { 'meta.createdAt': -1 }})
+//     } else {
+//         data = OpinionPdfs.find({
+//             $and:[
+//                 { "meta.refOpinion": refOpinion } , 
+//                 { $or:[
+//                     { "meta.archive": null },
+//                     { "meta.archive": false }
+//                 ]}]},
+//                 { sort: { 'meta.createdAt': -1 }});
+//     }
+
+//     return [
+//         data.cursor.map( async file => {
+//             const pdfs = await OpinionPdfs.findOneAsync({_id: file._id});
+//             let link = pdfs && pdfs.link();
+//             file.link = link;
+//             return file;
+//         }), 
+//         isLoading()
+//     ];
+// }, [refOpinion]);
 
 
 /**

@@ -1,4 +1,5 @@
 import React, { Fragment, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 import { FlowRouter } from 'meteor/kadira:flow-router';
 
 import PageHeader from 'antd/lib/page-header';
@@ -71,13 +72,17 @@ export const OpinionsDetailsForm = ({currentUser}) => {
 
     const [ selectedDetail ] = useAppState('selectedDetail');
 
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const tabPaneChanged = activeTabPane => {
         setActiveTabPane(activeTabPane);
     }
+
+    console.log("RENDER OPINONS DETAIL FORM", {activeTabPane})
     
-    if (FlowRouter.getQueryParam('pdfPreview') !== 'on' && visiblePdfPreview) {
+    if (searchParams.get('pdfPreview') !== 'on' && visiblePdfPreview) {
         setVisblePdfPreview(false);
-    } else if (FlowRouter.getQueryParam('pdfPreview') == 'on' && !visiblePdfPreview && pdfPreviewData) {
+    } else if (searchParams.get('pdfPreview') == 'on' && !visiblePdfPreview && pdfPreviewData) {
         setVisblePdfPreview(true);
     }
 
@@ -137,7 +142,11 @@ export const OpinionsDetailsForm = ({currentUser}) => {
 
 
                     setPdfPreviewData(res);
-                    FlowRouter.setQueryParams({ pdfPreview: 'on' });
+                    setSearchParams((prev) => {
+                        console.log("setSearchParams")
+                        prev.set('pdfPreview', 'on');
+                        return prev;
+                    })
                     setVisblePdfPreview(true);
                 }
                 setPendingPdfCreation(false);
@@ -326,6 +335,7 @@ export const OpinionsDetailsForm = ({currentUser}) => {
                 <Content>
                     { refDetail === null
                         ? <OpinionContent 
+                            activeTabPane={activeTabPane}
                             refOpinion={opinionId} currentUser={currentUser} 
                             canEdit={canEdit} canDelete={canDelete} canCancelShareWith={canCancelShare} canShareWithExplicitRole={canShareWithExplicitRole}
                             onTabPaneChanged={tabPaneChanged} >
