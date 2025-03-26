@@ -258,7 +258,6 @@ export class _EditableContent extends React.Component {
                 prev.set("activitiesBy", null);
                 return prev;
               });
-            // FlowRouter.setQueryParams({ activitiesBy: null });
         }
 
         this.setState({ mode: newMode });
@@ -483,7 +482,6 @@ export class _EditableContent extends React.Component {
             return prev;
           });
           
-        // FlowRouter.setQueryParams({activitiesBy: refDetail});
 
         setAppState({
             selectedDetail: {

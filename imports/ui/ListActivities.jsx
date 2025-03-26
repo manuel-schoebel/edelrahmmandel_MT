@@ -18,7 +18,6 @@ import { MentionsWithEmojis } from './components/MentionsWithEmojis';
 import { useOpinion , useActivities, useTest } from '../client/trackers';
 import { hasPermission } from '../api/helpers/roles';
 
-import { FlowRouter } from 'meteor/kadira:flow-router';
 import { Expert } from './components/Expert';
 import { useSearchParams, useLocation } from 'react-router';
 
