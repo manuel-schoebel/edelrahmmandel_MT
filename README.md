@@ -2,6 +2,16 @@
 
 Ein Tool zum Erstellen eines Gutachten.
 
+## App starten
+
+```
+git checkout meteor_update
+nvm use
+meteor npm i --legacy-peer-deps
+npx patch-package
+export MGP_SETTINGS='{\"ImagePath\":\"/PATH_TO/data/images\",\"PdfPath\":\"/PATH_TO/data/pdf\",\"AvatarsPath\":\"/PATH_TO/data/avatars\"}' meteor
+```
+
 ## Version 1
 
 Das ist die Version, die wir als Pilot zu anfg. Januar in Betrieb nehmen.
