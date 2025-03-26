@@ -9,7 +9,7 @@ git checkout meteor_update
 nvm use
 meteor npm i --legacy-peer-deps
 npx patch-package
-export MGP_SETTINGS='{\"ImagePath\":\"/PATH_TO/data/images\",\"PdfPath\":\"/PATH_TO/data/pdf\",\"AvatarsPath\":\"/PATH_TO/data/avatars\"}' meteor
+export MGP_SETTINGS='{"ImagePath":"/PATH_TO/data/images","PdfPath":"/PATH_TO/data/pdf","AvatarsPath":"/PATH_TO/data/avatars"}' meteor
 ```
 
 ## Version 1
