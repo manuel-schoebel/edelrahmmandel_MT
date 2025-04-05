@@ -37,7 +37,8 @@ export const sequenceNextValue = async (seqName, startValue = 1) => {
             // so another user had generated the sequence a few microsecs before
             // TODO: check error number or name
             if (err.name === '') {
-                return sequenceNextValue(seqName);
+                const value = await sequenceNextValue(seqName);
+                return value;
             }
         }
     }

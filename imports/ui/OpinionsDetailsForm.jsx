@@ -1,6 +1,5 @@
 import React, { Fragment, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router';
-import { FlowRouter } from 'meteor/kadira:flow-router';
 
 import PageHeader from 'antd/lib/page-header';
 import Layout from 'antd/lib/layout';
@@ -44,8 +43,6 @@ import {
 
 import { ModalShareWith } from './modals/share-with';
 import { useAppState } from '../client/AppState';
-
-
 
 export const OpinionsDetailsForm = ({currentUser}) => {
     const { opinionId, refDetail = null } = useParams();
@@ -395,7 +392,7 @@ export const OpinionsDetailsForm = ({currentUser}) => {
                             zIndex:100,
                             borderRadius:0
                         }}
-                        onClick={()=>{setVisblePdfPreview(false); FlowRouter.setQueryParams({pdfPreview: null})}}
+                        onClick={()=>{setVisblePdfPreview(false); setSearchParams({pdfPreview: null})}}
                     >
                         <CloseOutlined /> Vorschau beenden
                     </Button>

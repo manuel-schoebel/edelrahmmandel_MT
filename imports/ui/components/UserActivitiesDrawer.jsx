@@ -75,6 +75,8 @@ const getUrl = item => {
 export const UserActivitiesDrawer = ({ visible, onClose }) => {
     const [ userActivities, isLoading ] = useUserActivities({ orderBy:{ createdAt: -1} });
 
+    console.log({userActivities,isLoading})
+
     const handleLinkClick = item => {
         return e => {
             if (item.unread) {

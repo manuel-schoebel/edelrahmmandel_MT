@@ -161,26 +161,42 @@ export const useOpinion = ( refOpinion , hasRoleOPINION_CONTROL = false ) => use
  * Load all Opinions reactively
  * 
  */
-export const useOpinions = ( allOpinionsForControl ) => useTracker( () => {
+export const useOpinions = (allOpinionsForControl) => {
     const noDataAvailable = [ [] /*opinions*/,  true /*loading*/ ];
+
+    const isLoadingAllOpinionsForControl = useSubscribe(allOpinionsForControl ? 'allOpinionsForControl': null);
+    const isLoadingOpinions = useSubscribe('opinions');
 
     if (!Meteor.user()) {
         return noDataAvailable;
     }
 
-    let handler;
-    if ( allOpinionsForControl )// Spezialrolle für Gutachten Kontrolle beachten und dann alle Gutachten berücksichtigen, nicht nur die geteilten.
-        handler = Meteor.subscribe('allOpinionsForControl');
-    else
-        handler = Meteor.subscribe('opinions');
-    if (!handler.ready()) {
-        return noDataAvailable;
-    }
+    const opinions = useTracker(() => {
+        return Opinions.find({}, { sort: { opinionNo: -1 } }).fetch();
+    })
 
-    const opinions = Opinions.find({}, { sort: { opinionNo: -1 } }).fetch();
+    return [opinions, isLoadingAllOpinionsForControl() || isLoadingOpinions()]
+}
+// export const useOpinions = ( allOpinionsForControl ) => useTracker( () => {
+//     const noDataAvailable = [ [] /*opinions*/,  true /*loading*/ ];
 
-    return [opinions, false];
-});
+//     if (!Meteor.user()) {
+//         return noDataAvailable;
+//     }
+
+//     let handler;
+//     if ( allOpinionsForControl )// Spezialrolle für Gutachten Kontrolle beachten und dann alle Gutachten berücksichtigen, nicht nur die geteilten.
+//         handler = Meteor.subscribe('allOpinionsForControl');
+//     else
+//         handler = Meteor.subscribe('opinions');
+//     if (!handler.ready()) {
+//         return noDataAvailable;
+//     }
+
+//     const opinions = Opinions.find({}, { sort: { opinionNo: -1 } }).fetch();
+
+//     return [opinions, false];
+// });
 
 /**
  * Load the given OpinionDetail reactivly.
@@ -346,24 +362,42 @@ export const useUserActivityCount = () => useTracker( () => {
  * @param {String} refOpinion   id of the Opinion
  * @param {String} refDetail    id of the OpinionDetail
  */
-export const useUserActivities = ({orderBy}) => useTracker( () => {
+export const useUserActivities = ({ orderBy }) => {
     const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
-
     if (!Meteor.user()) {
         return noDataAvailable;
     }
-    const subscription = Meteor.subscribe('userActivities');
 
-    if (!subscription.ready()) {
-        return noDataAvailable;
-    }
+    const isLoadingUserAcitivities = useSubscribe('userActivities');
 
-    const sort = orderBy || { createdAt: 1};
-    return [
-        UserActivities.find({}, { sort }).fetch(),
-        false
-    ];
-});
+    const activities = useTracker(() => {
+        const sort = orderBy || { createdAt: 1};
+        return UserActivities.find({}, { sort }).fetch()
+    });
+
+    return [activities, isLoadingUserAcitivities()];
+}
+
+
+
+// export const useUserActivities = ({orderBy}) => useTracker( () => {
+//     const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
+
+//     if (!Meteor.user()) {
+//         return noDataAvailable;
+//     }
+//     const subscription = Meteor.subscribe('userActivities');
+
+//     if (!subscription.ready()) {
+//         return noDataAvailable;
+//     }
+
+//     const sort = orderBy || { createdAt: 1};
+//     return [
+//         UserActivities.find({}, { sort }).fetch(),
+//         false
+//     ];
+// });
 
 
 /**

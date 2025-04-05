@@ -30,6 +30,8 @@ export const ListOpinions = ({currentUser}) => {
     const [ opinions , isLoading ] = useOpinions( allOpinionsForControl );
     const [ filteredOpinions , setFilteredOpinions ] = useState( opinions );
 
+    console.log("filteredOpintions", {allOpinionsForControl, opinions});
+
     const { isDesktop } = useMediaQueries();
 
     // Spezialrolle für Gutachten Kontrolle beachten, falls bei User vorhanden.
