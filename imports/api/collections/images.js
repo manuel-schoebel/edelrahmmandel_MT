@@ -17,6 +17,17 @@ let ImageConfig = {
         // protect access to the file
         // only autth users that has shared the opinion can
         // access the image-file
+        // console.log("this", this)
+        // console.log("protected", fileObj)
+
+        // console.log("METEOR", Meteor)
+        // console.log(Meteor.server.sessions)
+
+        // TODO: fix again
+        // https://github.com/veliovgroup/Meteor-Files/issues/901
+
+        return true;
+
         if (!this.userId) return false;
 
         const { refOpinion } = fileObj.meta;

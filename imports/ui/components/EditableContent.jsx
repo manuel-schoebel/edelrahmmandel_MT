@@ -181,8 +181,6 @@ function withSearchParams(Component) {
     return function WrapperComponent(props) {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    console.log("searchParams", searchParams.get('activitiesBy'), props)
-      
       return <Component {...props} searchParams={searchParams} setSearchParams={setSearchParams} />;
     };
   }

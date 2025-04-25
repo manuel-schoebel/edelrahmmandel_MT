@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageHeader from 'antd/lib/page-header';
 import Breadcrumb from 'antd/lib/breadcrumb';
 import Space from 'antd/lib/space';
@@ -14,9 +14,24 @@ import { ListOpinions } from './ListOpinions';
 import { hasPermission } from './../api/helpers/roles';
 
 export const OpinionsForm = ({currentUser}) => {
+
+    const [canCreate, setCanCreate] = useState(false);
+    const [canManageTemplate, setCanManageTemplate] = useState(false);
+
+    useEffect(() => {
+        if(!currentUser) return;
+        hasPermission({currentUser}, 'opinion.create').then( permission => {
+            setCanCreate(permission);
+        } )
+        hasPermission({currentUser}, 'opinion.create').then( permission => {
+            setCanManageTemplate(permission)
+        } )
+    }, [currentUser])
+
+
     const pageHeaderButtons = <Space>
-        { hasPermission({currentUser}, 'opinion.create') ? <ModalOpinion mode="NEW" /> : null }
-        { hasPermission({currentUser}, 'opinion.manageTemplate') ? <ModalOpinion mode="NEW" createTemplate={true} /> : null }
+        { canCreate ? <ModalOpinion mode="NEW" /> : null }
+        { canManageTemplate ? <ModalOpinion mode="NEW" createTemplate={true} /> : null }
     </Space>;
 
     return (

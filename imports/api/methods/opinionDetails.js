@@ -96,7 +96,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (! hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (! await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten des Gutachten. Somit kann die Löschmarkierung nicht geändert werden.');
         }
 
@@ -183,7 +183,8 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (! hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.spellcheck')) {
+        if (! await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.spellcheck')) {
+            console.log("hasNOT permissiojn")
             throw new Meteor.Error('Keine Berechtigung zum Korrekturlesen des Gutachtens. Somit kann die Rechtschreibprüfung nicht gesetzt werden.');
         }
 
@@ -240,7 +241,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (! hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (! await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten dieses Bausteins zum Gutachten und Sie können daher die Antwort nicht als "richtig" einsetzen.');
         }
 
@@ -328,7 +329,7 @@ Meteor.methods({
 
         let currentUser = await Meteor.users.findOneAsync(this.userId);
 
-        if (!hasPermission({ currentUser }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Erstellen eines neuen Bausteins zu einem Gutachten.');
         }
         
@@ -451,7 +452,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten dieses Bausteins zum Gutachten.');
         }
 
@@ -539,18 +540,18 @@ Meteor.methods({
      * 
      * @param {String} id Id of the detail to remove
      */
-    'opinionDetail.remove'(id) {
+    async 'opinionDetail.remove'(id) {
         this.unblock();
 
         if (!this.userId) {
             throw new Meteor.Error('Not authorized.');
         }
         
-        let currentUser = Meteor.users.findOne(this.userId);
-        const old = OpinionDetails.findOne(id);
+        let currentUser = await Meteor.users.findOneAsync(this.userId);
+        const old = await OpinionDetails.findOneAsync(id);
 
         // check if opinion was sharedWith the current User
-        const shared = Opinions.findOne({
+        const shared = await Opinions.findOneAsync({
             _id: old.refOpinion,
             "sharedWith.user.userId": this.userId
         });
@@ -561,15 +562,15 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten dieses Bausteins zum Gutachten. Sie können es nicht zum Löschen markieren.');
         }
 
-        OpinionDetails.update(id, {
+        await OpinionDetails.updateAsync(id, {
             $set:{ deleted: true }
         });
        
-        let activity = injectUserData({ currentUser }, {
+        let activity = await injectUserData({ currentUser }, {
             refOpinion: old.refOpinion,
             refDetail: id._str || id,
             type: 'SYSTEM-LOG',
@@ -583,7 +584,7 @@ Meteor.methods({
             }]
         }, { created: true });
 
-        Activities.insert(activity);
+        await Activities.insertAsync(activity);
     },
 
     /**
@@ -619,7 +620,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.remove')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.remove')) {
             throw new Meteor.Error('Keine Berechtigung zum endgültigen Löschen dieses Bausteins zum Gutachten.');
         }
 
@@ -736,7 +737,7 @@ Meteor.methods({
 
             const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
             
-            if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.remove')) {
+            if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.remove')) {
                 throw new Meteor.Error('Keine Berechtigung zum wiederherstellen dieses Bausteins zum Gutachten.');
             }
 
@@ -859,7 +860,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten dieses Bausteins zum Gutachten.');
         }
 

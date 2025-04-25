@@ -22,7 +22,7 @@ accounts-password@3.0.2
 kadira:flow-router
 aldeed:collection2
 jquery
-ostrio:files
+ostrio:files@3.0.0-rc.3
 email@3.1.0
 zodern:standard-minifier-js@5.3.1
 aldeed:simple-schema

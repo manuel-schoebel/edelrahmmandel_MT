@@ -31,7 +31,6 @@ export class ImageAnnotation extends React.Component {
                     fileName: `${this.props.imageId}.jpg`,
                     file: dataUrl,
                     isBase64: true,
-                    streams: 'dynamic',
                     chunkSize: 'dynamic',
                     meta: { refOpinion: this.props.refOpinion }
                 }, false);

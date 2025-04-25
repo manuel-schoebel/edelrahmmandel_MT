@@ -32,7 +32,7 @@ Meteor.methods({
         // check if the user wants to create a new Template or a "normal" opinion
         // therefor we have to check different permissions
         const permissionName = data.isTemplate ? 'opinion.manageTemplate' : 'opinion.create';
-        if (!hasPermission({ currentUser }, permissionName)) {
+        if (!await hasPermission({ currentUser }, permissionName)) {
             const errorMessage = data.isTemplate 
                 ? 'Keine Berechtigung zum Erstellen einer Gutachten-Vorlage'
                 : 'Keine Berechtigung zum Erstellen eines neuen Gutachten.';
@@ -146,7 +146,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Aktualisieren des angegebenen Gutachtens.');
         }
         
@@ -185,7 +185,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.canPostMessage')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.canPostMessage')) {
             throw new Meteor.Error('Keine Berechtigung zum Schreiben von Nachrichten des angegebenen Gutachtens. Sie können das Benutzerverzeichnis nicht einsehen.');
         }
 
@@ -226,7 +226,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten der Teilnehmer eines Gutachten.');
         }
 
@@ -305,7 +305,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Editieren der Variablen eines Gutachten.');
         }
 
@@ -365,7 +365,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Löschen der Variablen eines Gutachten.');
         }
 
@@ -422,7 +422,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten der Teilnehmer eines Gutachten.');
         }
 
@@ -484,7 +484,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Editieren der Teilnehmer eines Gutachten.');
         }
 
@@ -549,7 +549,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Löschen des Teilnehmers eines Gutachten.');
         }
 

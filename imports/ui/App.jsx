@@ -107,7 +107,6 @@ export const App = ({content, refOpinion, refDetail, activeMenuKey, ...props}) =
             e.stopPropagation();
         }
     }*/
-    console.log("RENDER")
     return (
         <Routes>
             <Route path="verify-email/:token" element={<VerifyEMail />} />

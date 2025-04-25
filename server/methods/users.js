@@ -31,7 +31,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten des Gutachtens. Sie können keinen Gutachter auswählen.');
         }
         
@@ -95,7 +95,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit')) {
             throw new Meteor.Error('Keine Berechtigung zum Bearbeiten des Gutachtens. Sie können keinen Gutachter auswählen.');
         }
         
@@ -331,7 +331,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'shareWith')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'shareWith')) {
             throw new Meteor.Error('Sie besitzen keine Berechtigung zum Teilen des Gutachtens mit anderen Benutzern.');
         }
 
@@ -395,10 +395,10 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'shareWith')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'shareWith')) {
             throw new Meteor.Error('Sie besitzen keine Berechtigung zum Teilen des Gutachtens mit anderen Benutzern.');
         }
-        if (data.explicitRole && !hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'shareWithExplicitRole')) {
+        if (data.explicitRole && !await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'shareWithExplicitRole')) {
             throw new Meteor.Error('Sie besitzen keine Berechtigung zum Teilen des Gutachtens mit anderen Benutzern unter Verwendung einer expliziten Rollenzuweisung.');
         }
         const { userId, firstName, lastName } = data.user;
@@ -476,7 +476,7 @@ Meteor.methods({
 
         const sharedWithRole = shared.sharedWith.find( s => s.user.userId == this.userId );
         
-        if (!hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'cancelSharedWith')) {
+        if (!await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'cancelSharedWith')) {
             throw new Meteor.Error('Sie besitzen keine Berechtigung für das Löschen des Benutzers zu diesem Dokument.');
         }
         

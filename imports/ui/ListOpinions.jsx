@@ -30,8 +30,6 @@ export const ListOpinions = ({currentUser}) => {
     const [ opinions , isLoading ] = useOpinions( allOpinionsForControl );
     const [ filteredOpinions , setFilteredOpinions ] = useState( opinions );
 
-    console.log("filteredOpintions", {allOpinionsForControl, opinions});
-
     const { isDesktop } = useMediaQueries();
 
     // Spezialrolle für Gutachten Kontrolle beachten, falls bei User vorhanden.
@@ -59,7 +57,6 @@ export const ListOpinions = ({currentUser}) => {
             cancelText: 'Abbruch',
             onOk: closeConfirm => {
                 closeConfirm();
-                console.log( id );
                 /*Meteor.call('opinions.unshareOpinionUser' , id , ( err ) => {
                     if ( err ) {
                         console.log( `Fehler beim Löschen des Gutachtens mit ID ${id}`, err );

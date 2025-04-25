@@ -74,8 +74,6 @@ export const OpinionsDetailsForm = ({currentUser}) => {
     const tabPaneChanged = activeTabPane => {
         setActiveTabPane(activeTabPane);
     }
-
-    console.log("RENDER OPINONS DETAIL FORM", {activeTabPane})
     
     if (searchParams.get('pdfPreview') !== 'on' && visiblePdfPreview) {
         setVisblePdfPreview(false);

@@ -7,7 +7,6 @@ import { ImageAnnotation } from './components/ImageAnnotation';
 
 export const ListImages = ( { imageOrImages } ) => {
     const [ images, isLoading ] = useImages(imageOrImages.map( image => image._id ));
-
     if (isLoading) return null;
 
     return (

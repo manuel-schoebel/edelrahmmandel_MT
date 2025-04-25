@@ -37,7 +37,7 @@ Meteor.methods({
 
         const sharedWithRole = opinion.sharedWith.find( s => s.user.userId == this.userId );
         
-        if ( !hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit' )) {
+        if ( !await hasPermission({ currentUser, sharedRole: sharedWithRole.role }, 'opinion.edit' )) {
             throw new Meteor.Error( 'Keine Berechtigung zum Bearbeiten des angegebenen Gutachtens. Sie können daher die KI nicht befragen zu diesem Gutachten.' );
         }
 

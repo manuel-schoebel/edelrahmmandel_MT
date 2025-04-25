@@ -62,7 +62,7 @@ export const ModalFileUpload = ( { mode/*NEW||EDIT*/, refOpinion, refDetail }) =
                 //console.log('upload start', this)
             });
 
-            upload.on('end', function (error, fileObj) {                
+            upload.on('end', function (error, fileObj) {        
                 if (error) {
                     message.error(`Fehler beim Upload: ${error}`);
                 } else {
@@ -75,7 +75,7 @@ export const ModalFileUpload = ( { mode/*NEW||EDIT*/, refOpinion, refDetail }) =
                         text: 'Bildtext',
                         // _id is not yet available in fileObj but we need it
                         // see: https://github.com/veliovgroup/Meteor-Files/issues/889
-                        files: [{...fileObj, _id: this.config.fileId}]
+                        files: [fileObj]
                     }
 
                     Meteor.call('opinionDetail.insert', data, (err, res) => {

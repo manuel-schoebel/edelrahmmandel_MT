@@ -54,8 +54,8 @@ mongo-dev-server@1.1.1
 mongo-id@1.0.9
 npm-mongo@4.17.4
 ordered-dict@1.2.0
-ostrio:cookies@2.8.1
-ostrio:files@3.0.0-beta.6
+ostrio:cookies@2.9.0
+ostrio:files@3.0.0-rc.3
 promise@1.0.0
 raix:eventemitter@1.0.0
 random@1.2.2

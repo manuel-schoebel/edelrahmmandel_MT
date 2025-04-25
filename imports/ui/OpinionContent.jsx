@@ -86,7 +86,7 @@ export const OpinionSpellcheckList = ({refOpinion, currentUser, canEdit=false, c
                             </div>
 
                         return <div style={{width:50}} >
-                            <Link reloadDocument to={{pathname: `/opinions/${refOpinion}/${item.refParentDetail}`, search: `?activitiesBy=${item._id}`}}>
+                            <Link to={{pathname: `/opinions/${refOpinion}/${item.refParentDetail}`, search: `?activitiesBy=${item._id}`}}>
                                 {'' + (item.printParentPosition || '') + item.printPosition}
                             </Link>
                         </div>
