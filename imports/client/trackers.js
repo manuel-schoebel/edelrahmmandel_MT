@@ -427,40 +427,14 @@ export const useImages = refImages => {
         return noDataAvailable;
     }
 
-
-    
-
-    // const subscription = Meteor.subscribe('images', refImages);
-
-    // if (!subscription.ready()) {
-    //     return noDataAvailable;
-    // }
-
-    // let images = [];
-
-    // if (Array.isArray(refImages)) {
-    //     images = Images.find( { _id: { $in: refImages } } ).fetch();    
-    // } else if ((typeof refImages === 'string' || refImages instanceof String)) {
-    //     images = Images.find( { _id: refImages } ).fetch(); 
-    // } else {
-    //     images = Images.find().fetch();
-    // }
-
     return [
         images?.cursor?.map( (file) => {
             file.link = Images.link(file)
-
-            // todo: annotStateImageId
-
-            // const imgs = Images.findOne({_id: file._id});
-            // let link = imgs && imgs.link();
-            // file.link = link;
-            // if ( file.meta
-            //   && file.meta.annotStateImageId ) {
-            //       const imgs2 = Images.findOne({_id: file.meta.annotStateImageId});
-            //       let link2 = imgs2 && imgs2.link();
-            //       file.link2 = link2;
-            // }
+            if(file.meta && file.meta.annotStateImageId) {
+                const imgs2 = Images.findOne({_id: file.meta.annotStateImageId});
+                let link2 = imgs2 && imgs2.link();
+                file.link2 = link2;
+            }
             return file;
         }),
         isLoadingImages()
