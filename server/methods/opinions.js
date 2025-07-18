@@ -912,7 +912,7 @@ Meteor.methods({
             }*/
 
             ///**/OpinionPdfs.config.storagePath = storagePath.config.storagePath + '/12345';
-            fileRef = await OpinionPdfs.write(fileData, {
+            fileRef = await OpinionPdfs.writeAsync(fileData, {
                 fileName: `${refOpinion}.pdf`,
                 type: 'application/pdf',
                 meta: {
