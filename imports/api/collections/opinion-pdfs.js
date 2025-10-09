@@ -18,14 +18,14 @@ let Config = {
         // protect access to the file
         // only autth users that has shared the opinion can
         // access the image-file
-        // if (!this.userId) return false;
+        if (!this.userId) return false;
 
         const { refOpinion } = fileObj.meta;
 
         // ... and check then if the current-user is member of sharedWith
         const opinion = await Opinions.findOneAsync({
             _id: refOpinion,
-            // 'sharedWith.user.userId': this.userId
+            'sharedWith.user.userId': this.userId
         });
 
         if (!opinion) return false;

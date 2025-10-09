@@ -6,23 +6,23 @@
 
 meteor-base@1.5.2             # Packages every Meteor app needs to have
 mobile-experience@1.1.2       # Packages for a great mobile UX
-mongo@2.0.2                   # The database Meteor supports right now
+mongo@2.1.4                   # The database Meteor supports right now
 reactive-var@1.0.13            # Reactive variable for tracker
 
 standard-minifier-css@1.9.3   # CSS minifier run for production mode
 es5-shim@4.8.1                # ECMAScript 5 compatibility for older browsers
-ecmascript@0.16.9              # Enable ECMAScript2015+ syntax in app code
-typescript@5.4.3              # Enable TypeScript syntax in .ts and .tsx modules
-shell-server@0.6.0            # Server-side component of the `meteor shell` command
+ecmascript@0.16.13              # Enable ECMAScript2015+ syntax in app code
+typescript@5.6.6              # Enable TypeScript syntax in .ts and .tsx modules
+shell-server@0.6.2            # Server-side component of the `meteor shell` command
 
 static-html@1.4.0             # Define static page content in .html files
 react-meteor-data@3.0.3       # React higher-order component for reactively tracking Meteor data
 less
-accounts-password@3.0.2
+accounts-password@3.2.1
 kadira:flow-router
 aldeed:collection2
 jquery
-ostrio:files@3.0.0-rc.3
-email@3.1.0
+ostrio:files@3.0.1
+email@3.1.2
 zodern:standard-minifier-js@5.3.1
 aldeed:simple-schema
