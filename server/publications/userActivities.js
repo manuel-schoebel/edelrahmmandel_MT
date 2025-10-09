@@ -8,7 +8,5 @@ Meteor.publish('userActivities', function publishActivities() {
         return this.ready();
       }
 
-      console.log("this.userId ", this.userId )
-
     return UserActivities.find({ refUser: this.userId });
 });

@@ -308,7 +308,7 @@ export const useTest = () => useTracker(() => {
  * @param {String} refOpinion   id of the Opinion
  * @param {String} refDetail    id of the OpinionDetail
  */
-export const useActivities = (refOpinion , refDetail , currentUser) => useTracker( () => {
+export const useActivities = (refOpinion , refDetail , currentUser) => {
     // return [ [], false ];
     const noDataAvailable = [ [] /*activities*/ , true /*loading*/];
     if (!Meteor.user()) {
@@ -319,20 +319,21 @@ export const useActivities = (refOpinion , refDetail , currentUser) => useTracke
         hasRoleOPINION_CONTROL = true;// Spezialrolle für Gutachten Kontrolle beachten.
     // Umstellung auf Async für Meteor Version 2.8, https://guide.meteor.com/2.8-migration
     //const subscription = Meteor.subscribe('activities', { refOpinion, refDetail });
-    const subscription = Meteor.subscribe('activitiesAsync', { refOpinion , refDetail , hasRoleOPINION_CONTROL});
     
-    if (!subscription.ready()) {
-        return noDataAvailable;
-    }
-
-    let activities;
-    if (refDetail) {
-        activities = Activities.find({ refDetail }, { sort: { createdAt: 1}}).fetch();
-    } else {
-        activities = Activities.find({ refOpinion, refDetail: null }, { sort: { createdAt: 1} }).fetch();
-    }
-    return [ activities, false ];
-}, [refOpinion, refDetail]);
+    const isLoadingActivities = useSubscribe('activitiesAsync',  { refOpinion , refDetail , hasRoleOPINION_CONTROL});
+    
+    
+    
+    const activities = useTracker(() => {
+           if (refDetail) {
+                return Activities.find({ refDetail }, { sort: { createdAt: 1}}).fetch();
+            } else {
+                return Activities.find({ refOpinion, refDetail: null }, { sort: { createdAt: 1} }).fetch();
+            }
+    });
+    
+    return [ activities, isLoadingActivities()]
+};
 
 
 /**

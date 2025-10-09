@@ -33,12 +33,12 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
     const [ canPostMessage, setCanPostMessage ] = useState(false);
 
     const parentRefDetail = refDetail;
+    const {hash} = useLocation();
 
     // We have to use the "wright" refDetail, so that a user-post will be stored to wright detail
     refDetail = searchParams.get("activitiesBy") || refDetail;
     useEffect( () => {
         // check for hash in route
-        const {hash} = useLocation();
         if (!hash)
             // scroll to end of list
             activitiesEndRef.current?.scrollIntoView(); //{ behavior: "smooth" })
@@ -55,7 +55,7 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
         return function cleanup(){
             clearInterval(timer);
         }
-    }, [activities]);
+    }, [activities, hash]);
 
     useEffect(() => {
         if(!currentUser && canPostMessage) {
@@ -176,7 +176,7 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
                                 <ReplyTo refOpinion={refOpinion} refActivity={item._id} />
                             ] : []}
                             author={ item.createdBy.firstName + ' ' + item.createdBy.lastName }
-                            avatar={ <Expert onlyAvatar user={item.createdBy}/> /*<Avatar>{item.createdBy.firstName.charAt(0) + item.createdBy.lastName.charAt(0)}</Avatar> */}
+                            avatar={ <Expert onlyAvatar user={item.createdBy}/> }
                             content={
                                 <div>
                                     <span dangerouslySetInnerHTML={ { __html: item.message } }></span>

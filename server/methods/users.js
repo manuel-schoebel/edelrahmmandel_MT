@@ -436,16 +436,21 @@ Meteor.methods({
         
         await Activities.insertAsync(activity);
 
-        const userActivity = await injectUserData({ currentUser }, {
-            refUser: userId,
-            type: 'SHAREDWITH',
-            refs: { refOpinion },
-            message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat ${opinion.isTemplate ? 'eine Gutachtenvorlage':'ein Gutachten'} mit Ihnen geteilt.`,
-            originalContent: `Gutachten / ${opinion.title} / ${opinion.opinionNo}`,
-            unread: true
-        }, { created: true });
+        try{
+            const userActivity = await injectUserData({ currentUser }, {
+                refUser: userId,
+                type: 'SHAREDWITH',
+                refs: { refOpinion },
+                message: `${currentUser.userData.firstName} ${currentUser.userData.lastName} hat ${opinion.isTemplate ? 'eine Gutachtenvorlage':'ein Gutachten'} mit Ihnen geteilt.`,
+                originalContent: `Gutachten / ${opinion.title} / ${opinion.opinionNo}`,
+                unread: true
+            }, { created: true });
 
-        await UserActivities.insertAsync(userActivity);
+            const userActivityCreated = await UserActivities.insertAsync(userActivity);
+        } catch(err) {
+            console.log("Error: Erstellen einer Nutzeraktivität fehlgeschlagen.", err)
+            throw new Meteor.Error('Erstellen einer Nutzeraktivität fehlgeschlagen.');
+        }
     },
 
     /**

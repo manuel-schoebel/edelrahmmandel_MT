@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, Link as ReactRouterLink } from 'react-router';
+import { Outlet, Link as ReactRouterLink, useParams } from 'react-router';
 
 import { ListActivities } from './ListActivities';
 
@@ -21,7 +21,7 @@ import { UserMenu } from './components/UserMenu';
 import { MaintenanceNotice } from './components/MaintenanceNotice';
 import { Link } from './components/Link';
 
-import { useServiceMaintenances } from '../client/trackers';
+import { useServiceMaintenances, useAccount } from '../client/trackers';
 
 const {
     Header, 
@@ -30,6 +30,9 @@ const {
 } = Layout;
 
 export const SiteLayout = props => {
+    const { opinionId, refDetail = null } = useParams();
+    const { currentUser } = useAccount();
+
     const [menuCollapsed, setMenuCollapsed] = useState(window.innerWidth < 600);
     const [activitiesCollapsed, setActivitiesCollapsed] = useState(window.innerWidth < 600);
     const [showUserActivies, setShowUserActivies] = useState(false);
@@ -151,7 +154,7 @@ export const SiteLayout = props => {
                 
             </Layout>
             
-            { !props.refOpinion 
+            { !opinionId
                 ? null 
                 : <Sider 
                     style={{
@@ -165,9 +168,9 @@ export const SiteLayout = props => {
                     
                     <ListActivities 
                         onClose={ toggleActivitiesSider }
-                        refOpinion={props.refOpinion} 
-                        refDetail={props.refDetail} 
-                        currentUser={props.currentUser} 
+                        refOpinion={opinionId} 
+                        refDetail={refDetail} 
+                        currentUser={currentUser} 
                     />
                 </Sider>
             }
