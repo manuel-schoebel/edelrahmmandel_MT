@@ -1,3 +1,5 @@
 node_modules/
 .vscode/settings.json
 .env
+kubernetes/**/secrets.yaml
+kubernetes/**/secrets-generator.yaml

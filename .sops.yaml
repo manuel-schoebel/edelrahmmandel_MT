@@ -1,0 +1,14 @@
+# SOPS Configuration
+# See docs/secrets_management.md for setup instructions
+#
+# To add a new key:
+# 1. Generate: age-keygen -o keyfile.txt
+# 2. Add public key below
+# 3. Run: sops updatekeys <encrypted-file>
+
+creation_rules:                                                                                                                                                                                                                                                                           
+  - path_regex: kubernetes/.*secret.*\.ya?ml$                                                                                                                                                                                                                                             
+    encrypted_regex: ^(data|stringData)$                                                                                                                                                                                                                                                  
+    age: >-                                                                                                                                                                                                                                                                               
+      age1swprz6w7uv9wuwk76x397mx7kxmpjkv7f60azaat0l2ht27uvfvq0ngllg,
+      age1gj2l69qlla5cctdpxklpcra0nhg4y94j3yws685uylhwmvfmv3rq0mxryr

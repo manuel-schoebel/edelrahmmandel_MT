@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edelrahmmandel-deployment
+  namespace: edelrahmmandel-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edelrahmmandel
+  template:
+    metadata:
+      labels:
+        app: edelrahmmandel
+    spec:
+      containers:
+        - name: edelrahmmandel
+          image: ghcr.io/manuel-schoebel/edelrahmmandel_mt:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: edelrahmmandel-config
+            - secretRef:
+                name: edelrahmmandel-secrets
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: edelrahmmandel-data
