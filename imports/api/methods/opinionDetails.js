@@ -389,7 +389,7 @@ Meteor.methods({
             throw new Meteor.Error(err.message);
         }
         
-        if (rePositionSiblings){
+        if (rePositionSiblings && Meteor.isServer){
             // get max position +1 to insert the detail at the end
             const lastDetailAtSameLevel = await OpinionDetails.updateAsync({
                 refOpinion: detailData.refOpinion,

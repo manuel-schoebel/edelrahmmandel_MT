@@ -99,26 +99,23 @@ export const ListActivities = ( { refOpinion, refDetail, currentUser, onClose } 
     // }
 
     const postMessage = () => {
-        form.validateFields().then( values => {
+        form.validateFields().then( async values => {
             setWorking(true);
 
-            setTimeout( _ => {
+            try {
                 const activitiesBy = searchParams.get("activitiesBy") || null;
-
-                Meteor.call('activities.postmessage', refOpinion, refDetail, parentRefDetail, activitiesBy, values.message, (err, res) => {
-                    setWorking(false);
-                    
-                    if (err) {
-                        return Modal.error({
-                            title: 'Fehler',
-                            content: 'Es ist ein interner Fehler aufgetreten. ' + err.message
-                        });
-                    }
-                    form.resetFields();
+                await Meteor.callAsync('activities.postmessage', refOpinion, refDetail, parentRefDetail, activitiesBy, values.message);
+                form.resetFields();
+            } catch(err) {
+                Modal.error({
+                    title: 'Fehler',
+                    content: 'Es ist ein interner Fehler aufgetreten. ' + err.message
                 });
-            }, 100);
+            } finally {
+                setWorking(false);
+            }
         }).catch( info => {
-            
+
         });
     }
 
