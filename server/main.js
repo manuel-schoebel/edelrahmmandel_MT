@@ -129,6 +129,13 @@ const sendUnreadMessages = async () => {
 }
 
 Meteor.startup(() => {
+    // In Meteor 3, Email.sendAsync throws if MAIL_URL is not set.
+    // On staging/dev without a mail server, stub it out to prevent crashes.
+    if (!process.env.MAIL_URL) {
+        Email.customTransport = (options) => {
+            console.log('[Email suppressed - no MAIL_URL]', options.to, '|', options.subject);
+        };
+    }
 
     Meteor.setInterval( sendUnreadMessages, 1000 * 60 * 30 /* alle 30 Minuten */);
     sendUnreadMessages();
