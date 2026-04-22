@@ -133,7 +133,11 @@ Meteor.startup(() => {
     // On staging/dev without a mail server, stub it out to prevent crashes.
     if (!process.env.MAIL_URL) {
         Email.customTransport = (options) => {
-            console.log('[Email suppressed - no MAIL_URL]', options.to, '|', options.subject);
+            console.log('=== EMAIL (no MAIL_URL) ===');
+            console.log('To:', options.to);
+            console.log('Subject:', options.subject);
+            console.log('Body:', options.text || options.html);
+            console.log('==========================');
         };
     }
 
