@@ -14,7 +14,7 @@
     "antd": "^4.24.12",
     "antd-img-crop": "^3.16.0",
     "array-move": "^3.0.1",
-    "axios": "^1.6.8",
+    "axios": "1.6.8",
     "bcrypt": "^5.1.0",
     "canvas": "^2.11.2",
     "compressorjs": "^1.2.1",
@@ -46,6 +46,7 @@
     "testModule": "tests/main.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "webpack": "^5.89.0"
   }
 }

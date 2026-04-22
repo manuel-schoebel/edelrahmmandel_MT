@@ -43,6 +43,7 @@ export const sequenceNextValue = async (seqName, startValue = 1) => {
         }
     }
 
+    // MongoDB driver v6 (Meteor 3) returns the document directly, not wrapped in {value: doc}
     const result = await SequencesRawCollection.findOneAndUpdate({ _id: seqName }, { $inc: { value: 1 } } );
-    return result.value.value;
+    return result.value;
 }

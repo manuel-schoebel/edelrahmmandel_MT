@@ -1,0 +1,33 @@
+{
+  "cookies": [
+    {
+      "name": "x_mtok",
+      "value": "juSnq9AsdkPv6qshK",
+      "domain": "edelrahmmandel-staging.kumpel.cloud",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://edelrahmmandel-staging.kumpel.cloud",
+      "localStorage": [
+        {
+          "name": "Meteor.userId",
+          "value": "sZsw5AZPG2vAaChLP"
+        },
+        {
+          "name": "Meteor.loginTokenExpires",
+          "value": "Tue Jul 21 2026 10:47:13 GMT+0200 (Central European Summer Time)"
+        },
+        {
+          "name": "Meteor.loginToken",
+          "value": "z-OZdkvaCClbOVC5wC1LeMPIwz1B3sgT42hAbiEGU52"
+        }
+      ]
+    }
+  ]
+}
