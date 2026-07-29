@@ -6,7 +6,13 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: hcloud-volumes
+  # Muss auf das real gebundene Volume passen: beim Wechsel auf
+  # At-Rest-Verschluesselung (LUKS) am 22.07.2026 wurde die PVC mit
+  # `hcloud-volumes-encrypted` neu angelegt, seither Cluster-Default.
+  # Die `spec` einer gebundenen PVC ist unveraenderlich — mit dem alten Wert
+  # scheiterte JEDER ArgoCD-Sync an dieser Ressource und riss den gesamten
+  # Sync mit (seit 22.07. kam nichts mehr im Cluster an).
+  storageClassName: hcloud-volumes-encrypted
   resources:
     requests:
       storage: 10Gi
